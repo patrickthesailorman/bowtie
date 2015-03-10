@@ -13,10 +13,16 @@ public class ProxyTest {
         
         final RestAdapter restAdapter = new RestAdapter.Builder().setEndpoint("http://localhost/service").build();
         final FakeClient fakeClient = restAdapter.create(FakeClient.class);
+        System.out.println("What's my class?  " + fakeClient.getClass().getName());
         
         fakeClient.getFakeResponse();
         
-        fakeClient.getWithParameters("Owen");
+        fakeClient.getWithPathParameters("Owen");
+        
+        fakeClient.getWithFormParameters("Nick");
+        
+        //cache?
+        fakeClient.getFakeResponse();
     }
 
 }
