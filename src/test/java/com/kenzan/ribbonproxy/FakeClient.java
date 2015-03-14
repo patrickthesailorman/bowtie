@@ -1,26 +1,21 @@
 package com.kenzan.ribbonproxy;
 
-import com.kenzan.ribbonproxy.annotation.FormParam;
+import com.kenzan.ribbonproxy.annotation.QueryParam;
 import com.kenzan.ribbonproxy.annotation.GET;
-import com.kenzan.ribbonproxy.annotation.POST;
 import com.kenzan.ribbonproxy.annotation.Path;
 import com.kenzan.ribbonproxy.annotation.PathParam;
+import com.kenzan.ribbonproxy.model.FakeUserResponse;
+import com.kenzan.ribbonproxy.model.FakeUsersResponse;
 
 
 public interface FakeClient {
 
     @GET
-    @Path("/service/endpoint")
-    public FakeResponse getFakeResponse();
-    
+    @Path("/user/{name}")
+    public FakeUserResponse getUser(@PathParam("username") String name);
     
     @GET
-    @Path("/service/endpoint/{name}")
-    public FakeResponse getWithPathParameters(@PathParam("name") String name);
-    
-    
-    @POST
-    @Path("/service/endpoint/")
-    public FakeResponse getWithFormParameters(@FormParam("name") String name);
+    @Path("/user")
+    public FakeUsersResponse getUsers(@QueryParam("byUsername") String username);
     
 }
