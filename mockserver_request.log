@@ -1,0 +1,96 @@
+2015-03-14 13:43:00,227 {
+  "httpRequest" : {
+    "method" : "GET",
+    "path" : "/user/jdoe"
+  },
+  "httpResponse" : {
+    "statusCode" : 200,
+    "body" : "{ \"name\" : \"John Doe\" }"
+  },
+  "times" : {
+    "remainingTimes" : 0,
+    "unlimited" : true
+  }
+}
+2015-03-14 13:43:00,233 {
+  "httpRequest" : {
+    "method" : "GET",
+    "path" : "/user",
+    "queryStringParameters" : [ {
+      "name" : "byUsername",
+      "values" : [ "jdoe" ]
+    } ]
+  },
+  "httpResponse" : {
+    "statusCode" : 200,
+    "body" : "{ \"users\" : [{ \"name\" : \"John Doe\" }]"
+  },
+  "times" : {
+    "remainingTimes" : 0,
+    "unlimited" : true
+  }
+}
+2015-03-14 13:45:15,057 {
+  "httpRequest" : {
+    "method" : "GET",
+    "path" : "/user/jdoe"
+  },
+  "httpResponse" : {
+    "statusCode" : 200,
+    "body" : "{ \"name\" : \"John Doe\" }"
+  },
+  "times" : {
+    "remainingTimes" : 0,
+    "unlimited" : true
+  }
+}
+2015-03-14 13:45:15,067 {
+  "httpRequest" : {
+    "method" : "GET",
+    "path" : "/user",
+    "queryStringParameters" : [ {
+      "name" : "byUsername",
+      "values" : [ "jdoe" ]
+    } ]
+  },
+  "httpResponse" : {
+    "statusCode" : 200,
+    "body" : "{ \"users\" : [{ \"name\" : \"John Doe\" }]"
+  },
+  "times" : {
+    "remainingTimes" : 0,
+    "unlimited" : true
+  }
+}
+2015-03-14 13:50:32,350 {
+  "httpRequest" : {
+    "method" : "GET",
+    "path" : "/user/jdoe"
+  },
+  "httpResponse" : {
+    "statusCode" : 200,
+    "body" : "{ \"name\" : \"John Doe\" }"
+  },
+  "times" : {
+    "remainingTimes" : 0,
+    "unlimited" : true
+  }
+}
+2015-03-14 13:50:32,356 {
+  "httpRequest" : {
+    "method" : "GET",
+    "path" : "/user",
+    "queryStringParameters" : [ {
+      "name" : "byUsername",
+      "values" : [ "jdoe" ]
+    } ]
+  },
+  "httpResponse" : {
+    "statusCode" : 200,
+    "body" : "{ \"users\" : [{ \"name\" : \"John Doe\" }] }"
+  },
+  "times" : {
+    "remainingTimes" : 0,
+    "unlimited" : true
+  }
+}

@@ -6,30 +6,30 @@ import java.lang.reflect.Proxy;
 
 public class RestAdapter {
     
-    private String endpoint;
+    private String namedClient;
 
-    private RestAdapter(String endpoint) {
-        this.endpoint = endpoint;
+    private RestAdapter(String namedClient) {
+        this.namedClient = namedClient;
     }
 
     public static class Builder{
         
-        private String endpoint;
+        private String namedClient;
 
-        public Builder setEndpoint(String endpoint){
-            this.endpoint = endpoint;
+        public Builder setNamedClient(String namedClient){
+            this.namedClient = namedClient;
             return this;
         }
 
         public RestAdapter build() {
-            return new RestAdapter(endpoint);
+            return new RestAdapter(namedClient);
         }
         
     }
 
     public <T> T create(Class<T> clientClass) {
 
-        InvocationHandler invocationHandler = new JerseyInvocationHandler(this.endpoint);
+        InvocationHandler invocationHandler = new JerseyInvocationHandler(this.namedClient);
         Object proxyInstance = Proxy.newProxyInstance(ClassLoader.getSystemClassLoader(),
             new Class<?>[]{clientClass}, invocationHandler);
         return (T)proxyInstance;
