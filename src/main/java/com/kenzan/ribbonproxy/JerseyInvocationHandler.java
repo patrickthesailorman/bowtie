@@ -33,7 +33,7 @@ import com.sun.jersey.api.client.filter.LoggingFilter;
 
 class JerseyInvocationHandler implements InvocationHandler{
     
-    private static class MethodInfo{
+    private class MethodInfo{
         
         final private String path;
         private final Parameter[] parameters;
@@ -145,6 +145,34 @@ class JerseyInvocationHandler implements InvocationHandler{
             return Optional.ofNullable(body);
         }
         
+        
+        private HttpRequest toHttpRequest(Object[] args) {
+
+            final Builder requestBuilder = HttpRequest.newBuilder()
+            .verb(this.verb)
+            .uri(this.getRenderedPath(args));
+            
+            this.getQueryParameters(args).forEach((k,v) -> {
+                requestBuilder.queryParams(k, v);
+            });
+            
+            this.getHeaders(args).forEach((k,v) -> {
+                requestBuilder.header(k, v);
+            });
+            
+            this.getBody(args).ifPresent(t -> {
+                try {
+                    requestBuilder
+                    .entity(objectMapper.writeValueAsString(t));
+                } catch (Exception e) {
+                    e.printStackTrace();  ///XXX: decide there is better exception handling
+                }
+            });
+            
+            HttpRequest request = requestBuilder.build();
+            return request;
+        }
+        
         @Override
         public String toString() {
             return "HttpRequest [path=" + path + ", parameters=" + parameters + "]";
@@ -165,21 +193,19 @@ class JerseyInvocationHandler implements InvocationHandler{
         }
     }
     
+    final ObjectMapper objectMapper = new ObjectMapper(); //XXX Is this thread safe?
     private Map<Method, MethodInfo> cache = new HashMap<>();
+    private final RestClient restClient;
 
-    private String namedClient;
 
     public JerseyInvocationHandler(String namedClient) {
-        this.namedClient = namedClient;
+        restClient = (RestClient)ClientFactory.getNamedClient(namedClient);
     }
 
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
    
         System.out.println("\n\n");
         System.out.println("args: " + method.getName() +  " " + (args == null ? "" : Arrays.asList(args)));
-        System.out.println("namedClient => " + namedClient);
-        
-        final ObjectMapper objectMapper = new ObjectMapper(); //XXX should this be cached?
         
         MethodInfo methodInfo = cache.get(method);
         if(methodInfo == null){
@@ -187,31 +213,10 @@ class JerseyInvocationHandler implements InvocationHandler{
             cache.put(method, methodInfo);
         }
         
-        final RestClient restClient = (RestClient)ClientFactory.getNamedClient(namedClient);
-        restClient.getJerseyClient().addFilter(new LoggingFilter(System.out));  //XXX change to logger
+        restClient.getJerseyClient()
+            .addFilter(new LoggingFilter(System.out));  //XXX change to logger make configurable from the adapter?
         
-        final Builder requestBuilder = HttpRequest.newBuilder()
-        .verb(methodInfo.verb)
-        .uri(methodInfo.getRenderedPath(args));
-        
-        methodInfo.getQueryParameters(args).forEach((k,v) -> {
-            requestBuilder.queryParams(k, v);
-        });
-        
-        methodInfo.getHeaders(args).forEach((k,v) -> {
-            requestBuilder.header(k, v);
-        });
-        
-        methodInfo.getBody(args).ifPresent(t -> {
-            try {
-                requestBuilder
-                .entity(objectMapper.writeValueAsString(t));
-            } catch (Exception e) {
-                e.printStackTrace();  ///XXX: decide there is better exception handling
-            }
-        });
-        
-        HttpRequest request = requestBuilder.build();
+        final HttpRequest request = methodInfo.toHttpRequest(args);
         final HttpResponse httpResponse = restClient.executeWithLoadBalancer(request);
         
         final Object object;
@@ -222,5 +227,7 @@ class JerseyInvocationHandler implements InvocationHandler{
         }
         
         return object;
-    }   
+    }
+
+      
 }
