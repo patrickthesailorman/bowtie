@@ -18,4 +18,6 @@ public @interface Http {
     
     public Header[] headers() default {};
     
+    public Class responseClass() default Class.class;
+    
 }

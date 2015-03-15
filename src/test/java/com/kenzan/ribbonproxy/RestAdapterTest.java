@@ -7,6 +7,8 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import rx.Observable;
+
 import com.kenzan.ribbonproxy.model.FakeUser;
 import com.kenzan.ribbonproxy.model.FakeUserAddress;
 import com.kenzan.ribbonproxy.model.FakeUsers;
@@ -29,10 +31,20 @@ public class RestAdapterTest {
                         .build();
         fakeClient = restAdapter.create(FakeClient.class);
     }
+    
 
     @Test
     public void testGetUser() {
         FakeUser user = fakeClient.getUser("jdoe");
+        Assert.assertThat(user.getName(), IsEqual.equalTo("John Doe"));
+    }
+    
+    
+
+
+    @Test
+    public void testGetUserObservable() {
+        FakeUser user = fakeClient.getUserObservable("jdoe").toBlockingObservable().single();
         Assert.assertThat(user.getName(), IsEqual.equalTo("John Doe"));
     }
     
@@ -52,7 +64,7 @@ public class RestAdapterTest {
     
     
     @Test
-    public void emailUser() {
+    public void testEmailUser() {
         FakeUser user = new FakeUser();
         user.setName("John Doe");
         
@@ -60,4 +72,11 @@ public class RestAdapterTest {
         Assert.assertThat(response.getStatus(), IsEqual.equalTo(200));
     }
 
+    
+    @Test
+    public void testDeleteUser() {
+        HttpResponse response = fakeClient.deleteUser("jdoe");
+        Assert.assertThat(response.getStatus(), IsEqual.equalTo(200));
+    }
+    
 }
