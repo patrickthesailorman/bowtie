@@ -6,18 +6,18 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 
-public class FakeUsersResponse {
+public class FakeUsers {
     
     @JsonProperty
-    private List<FakeUserResponse> users = new ArrayList<>();
+    private List<FakeUser> users = new ArrayList<>();
     
     
-    public void setUsers(List<FakeUserResponse> users) {
+    public void setUsers(List<FakeUser> users) {
         this.users = users;
     }
     
     
-    public List<FakeUserResponse> getUsers() {
+    public List<FakeUser> getUsers() {
         return users;
     }
 

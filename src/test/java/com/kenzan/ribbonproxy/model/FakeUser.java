@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 
 
-public class FakeUserResponse {
+public class FakeUser {
 
     @JsonProperty
     private String name;
