@@ -1,6 +1,7 @@
 package com.kenzan.ribbonproxy;
 
 import java.io.InputStream;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -10,16 +11,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.core.UriBuilder;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
+import com.kenzan.ribbonproxy.annotation.Body;
+import com.kenzan.ribbonproxy.annotation.GET;
+import com.kenzan.ribbonproxy.annotation.Header;
+import com.kenzan.ribbonproxy.annotation.POST;
 import com.kenzan.ribbonproxy.annotation.Path;
-import com.kenzan.ribbonproxy.annotation.PathParam;
-import com.kenzan.ribbonproxy.annotation.QueryParam;
+import com.kenzan.ribbonproxy.annotation.Query;
 import com.netflix.client.ClientFactory;
 import com.netflix.client.http.HttpRequest;
 import com.netflix.client.http.HttpRequest.Builder;
@@ -30,31 +33,68 @@ import com.sun.jersey.api.client.filter.LoggingFilter;
 
 class JerseyInvocationHandler implements InvocationHandler{
     
-    private static class MethodInfo{
-        
-        private final static VerbAnnotationFunction VERB_ANNOTATION_FUNCTION = new VerbAnnotationFunction();
+    private class MethodInfo{
         
         final private String path;
         private final Parameter[] parameters;
         private final Class responseClass;
         private final Verb verb;
+        private final Map<String, String> headers;
 
         public MethodInfo(final Method method) {
             
-            //Get PATH
-            Optional<String> path = Arrays.stream(method.getAnnotationsByType(Path.class))
-                            .findFirst()
-                            .map(t -> ((Path)t).value());
+            //GET VERB ANNOTATION
+            Optional<Annotation> verbAnnotation = Arrays.stream(method.getAnnotations())
+                            .filter(t ->
+                                GET.class.equals(t.annotationType()) ||
+                                POST.class.equals(t.annotationType())
+                            ).findFirst();
             
-            if(!path.isPresent()){
+            
+            if(!verbAnnotation.isPresent()){
                 throw new IllegalStateException("No Path annotation present.");
             }
             
+            final Optional<Verb> httpVerb = verbAnnotation.map(t -> {
+                
+                final Verb verb;
+                if(GET.class.equals(t.annotationType())){
+                    verb = Verb.GET;
+                }else if(POST.class.equals(t.annotationType())){
+                    verb = Verb.POST;
+                }else{
+                    throw new IllegalStateException("Unsupported verb annotation: " + t);
+                }
+                
+                return verb;
+            });
+                
+            final Optional<String> httpPath = verbAnnotation.map(t -> {
+                
+                final String path;
+                if(GET.class.equals(t.annotationType())){
+                    path = ((GET)t).value();
+                }else if(POST.class.equals(t.annotationType())){
+                    path = ((POST)t).value();
+                }else{
+                    throw new IllegalStateException("Unsupported path annotation: " + t);
+                }
+                
+                return path;
+            });
+            
+            this.path = httpPath.get();
+            this.verb = httpVerb.get();
+            
             this.responseClass = method.getReturnType();
-            this.path = path.get();
             this.parameters = method.getParameters();
             
-            this.verb = VERB_ANNOTATION_FUNCTION.apply(method.getAnnotations());
+            headers = Arrays.stream(
+                method.getAnnotationsByType(Header.class))
+                .collect(Collectors.toMap(
+                    t -> t.name(), 
+                    t -> t.value()
+                ));
             
         }
         
@@ -65,7 +105,7 @@ class JerseyInvocationHandler implements InvocationHandler{
             
             for(int i = 0; i < parameters.length; i++){
                 final Parameter parameter = parameters[i];
-                if(parameter.getAnnotation(PathParam.class) != null){
+                if(parameter.getAnnotation(Path.class) != null){
                     pathArgs.add(args[i]);
                 }
             }
@@ -75,6 +115,62 @@ class JerseyInvocationHandler implements InvocationHandler{
                             .toString();
             return renderedPath;
 
+        }
+        
+        private Map<String, String> getHeaders(final Object[] args){
+            Map<String, String> allHeaders = this.headers;
+            
+            for(int i = 0; i < parameters.length; i++){
+                final Parameter parameter = parameters[i];
+                Header annotation = parameter.getAnnotation(Header.class);
+                if(annotation != null){
+                    allHeaders.put(annotation.name(), String.valueOf(args[i]));
+                }
+            }
+            
+            return allHeaders;
+        }
+        
+        private Optional<Object> getBody(Object[] args){
+            
+            Object body = null;
+            for(int i = 0; i < parameters.length; i++){
+                final Parameter parameter = parameters[i];
+                Body annotation = parameter.getAnnotation(Body.class);
+                if(annotation != null){
+                    body = args[i];
+                }
+            }
+            
+            return Optional.ofNullable(body);
+        }
+        
+        
+        private HttpRequest toHttpRequest(Object[] args) {
+
+            final Builder requestBuilder = HttpRequest.newBuilder()
+            .verb(this.verb)
+            .uri(this.getRenderedPath(args));
+            
+            this.getQueryParameters(args).forEach((k,v) -> {
+                requestBuilder.queryParams(k, v);
+            });
+            
+            this.getHeaders(args).forEach((k,v) -> {
+                requestBuilder.header(k, v);
+            });
+            
+            this.getBody(args).ifPresent(t -> {
+                try {
+                    requestBuilder
+                    .entity(objectMapper.writeValueAsString(t));
+                } catch (Exception e) {
+                    e.printStackTrace();  ///XXX: decide there is better exception handling
+                }
+            });
+            
+            HttpRequest request = requestBuilder.build();
+            return request;
         }
         
         @Override
@@ -88,7 +184,7 @@ class JerseyInvocationHandler implements InvocationHandler{
             final Map<String, String> paramMap = new HashMap<>();
             
             for(int i = 0; i < parameters.length; i++){
-                final QueryParam queryParam = parameters[i].getAnnotation(QueryParam.class);
+                final Query queryParam = parameters[i].getAnnotation(Query.class);
                 if(queryParam != null){
                     paramMap.put(queryParam.value(), String.valueOf(args[i]));
                 }
@@ -97,19 +193,19 @@ class JerseyInvocationHandler implements InvocationHandler{
         }
     }
     
+    final ObjectMapper objectMapper = new ObjectMapper(); //XXX Is this thread safe?
     private Map<Method, MethodInfo> cache = new HashMap<>();
+    private final RestClient restClient;
 
-    private String namedClient;
 
     public JerseyInvocationHandler(String namedClient) {
-        this.namedClient = namedClient;
+        restClient = (RestClient)ClientFactory.getNamedClient(namedClient);
     }
 
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
    
         System.out.println("\n\n");
         System.out.println("args: " + method.getName() +  " " + (args == null ? "" : Arrays.asList(args)));
-        System.out.println("namedClient => " + namedClient);
         
         MethodInfo methodInfo = cache.get(method);
         if(methodInfo == null){
@@ -117,26 +213,21 @@ class JerseyInvocationHandler implements InvocationHandler{
             cache.put(method, methodInfo);
         }
         
-        RestClient restClient = (RestClient)ClientFactory.getNamedClient(namedClient);
-        restClient.getJerseyClient().addFilter(new LoggingFilter(System.out));
+        restClient.getJerseyClient()
+            .addFilter(new LoggingFilter(System.out));  //XXX change to logger make configurable from the adapter?
         
-        final Builder requestBuilder = HttpRequest.newBuilder()
-        .verb(methodInfo.verb)
-        .uri(methodInfo.getRenderedPath(args));
-        
-        methodInfo.getQueryParameters(args).forEach((k,v) -> {
-            System.out.println(k + " " + v);
-            requestBuilder.queryParams(k, v);
-        });
-        
-//        requestBuilder.queryParams("h", "v");
-        
-        HttpRequest request = requestBuilder.build();
+        final HttpRequest request = methodInfo.toHttpRequest(args);
         final HttpResponse httpResponse = restClient.executeWithLoadBalancer(request);
         
-        final ObjectMapper objectMapper = new ObjectMapper(); //XXX should this be cached?
-        Object object = objectMapper.reader(methodInfo.responseClass).readValue(httpResponse.getInputStream());
+        final Object object;
+        if(HttpResponse.class.equals(methodInfo.responseClass)){
+            object = httpResponse;
+        }else{
+            object = objectMapper.reader(methodInfo.responseClass).readValue(httpResponse.getInputStream());
+        }
         
         return object;
-    }   
+    }
+
+      
 }

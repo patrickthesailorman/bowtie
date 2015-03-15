@@ -6,9 +6,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 
-@Target({ElementType.TYPE, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface QueryParam {
-
-    public String value();
+@Target({ElementType.TYPE, ElementType.METHOD, ElementType.PARAMETER})
+public @interface Header {
+    
+    public String name();
+    
+    
+    public String value() default "";
 }

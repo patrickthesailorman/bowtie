@@ -7,8 +7,9 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.kenzan.ribbonproxy.model.FakeUserResponse;
-import com.kenzan.ribbonproxy.model.FakeUsersResponse;
+import com.kenzan.ribbonproxy.model.FakeUser;
+import com.kenzan.ribbonproxy.model.FakeUsers;
+import com.netflix.client.http.HttpResponse;
 import com.netflix.config.ConfigurationManager;
 
 
@@ -29,15 +30,24 @@ public class RestAdapterTest {
     }
 
     @Test
-    public void testGetPathParams() {
-        FakeUserResponse user = fakeClient.getUser("jdoe");
+    public void testGetUser() {
+        FakeUser user = fakeClient.getUser("jdoe");
         Assert.assertThat(user.getName(), IsEqual.equalTo("John Doe"));
     }
     
     @Test
-    public void testGetFormParams() {
-        FakeUsersResponse users = fakeClient.getUsers("jdoe");
+    public void testGetUsers() {
+        FakeUsers users = fakeClient.getUsers("jdoe","020835c7-cf7e-4ba5-b117-4402e5d79079");
         Assert.assertThat(users.getUsers().size(), IsEqual.equalTo(1));
+    }
+    
+    @Test
+    public void emailUser() {
+        FakeUser user = new FakeUser();
+        user.setName("John Doe");
+        
+        HttpResponse response = fakeClient.emailUser(user);
+        Assert.assertThat(response.getStatus(), IsEqual.equalTo(200));
     }
 
 }
