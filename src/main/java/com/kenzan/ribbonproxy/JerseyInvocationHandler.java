@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.core.UriBuilder;
@@ -17,9 +18,8 @@ import javax.ws.rs.core.UriBuilder;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import com.kenzan.ribbonproxy.annotation.Body;
-import com.kenzan.ribbonproxy.annotation.GET;
 import com.kenzan.ribbonproxy.annotation.Header;
-import com.kenzan.ribbonproxy.annotation.POST;
+import com.kenzan.ribbonproxy.annotation.Http;
 import com.kenzan.ribbonproxy.annotation.Path;
 import com.kenzan.ribbonproxy.annotation.Query;
 import com.netflix.client.ClientFactory;
@@ -71,56 +71,19 @@ class JerseyInvocationHandler implements InvocationHandler{
     
     private class MethodInfo{
         
-        final private String path;
         private final Parameter[] parameters;
         private final Class responseClass;
-        private final Verb verb;
         private final Map<String, String> headers;
+        private final Http http;
 
         public MethodInfo(final Method method) {
             
             //GET VERB ANNOTATION
-            Optional<Annotation> verbAnnotation = Arrays.stream(method.getAnnotations())
-                            .filter(t ->
-                                GET.class.equals(t.annotationType()) ||
-                                POST.class.equals(t.annotationType())
-                            ).findFirst();
-            
-            
-            if(!verbAnnotation.isPresent()){
-                throw new IllegalStateException("No Path annotation present.");
-            }
-            
-            final Optional<Verb> httpVerb = verbAnnotation.map(t -> {
-                
-                final Verb verb;
-                if(GET.class.equals(t.annotationType())){
-                    verb = Verb.GET;
-                }else if(POST.class.equals(t.annotationType())){
-                    verb = Verb.POST;
-                }else{
-                    throw new IllegalStateException("Unsupported verb annotation: " + t);
-                }
-                
-                return verb;
-            });
-                
-            final Optional<String> httpPath = verbAnnotation.map(t -> {
-                
-                final String path;
-                if(GET.class.equals(t.annotationType())){
-                    path = ((GET)t).value();
-                }else if(POST.class.equals(t.annotationType())){
-                    path = ((POST)t).value();
-                }else{
-                    throw new IllegalStateException("Unsupported path annotation: " + t);
-                }
-                
-                return path;
-            });
-            
-            this.path = httpPath.get();
-            this.verb = httpVerb.get();
+            http = Arrays.stream(method.getAnnotations())
+                            .filter(a -> Http.class.equals(a.annotationType()))
+                            .map(a -> (Http)a)
+                            .findFirst()
+                            .orElseThrow(() -> new IllegalStateException("No Http annotation present."));
             
             this.responseClass = method.getReturnType();
             this.parameters = method.getParameters();
@@ -146,7 +109,7 @@ class JerseyInvocationHandler implements InvocationHandler{
                 }
             }
             
-            String renderedPath = UriBuilder.fromPath(path)
+            String renderedPath = UriBuilder.fromPath(http.uriTemplate())
                             .buildFromEncoded(pathArgs.toArray())
                             .toString();
             return renderedPath;
@@ -185,7 +148,7 @@ class JerseyInvocationHandler implements InvocationHandler{
         private HttpRequest toHttpRequest(Object[] args) {
 
             final Builder requestBuilder = HttpRequest.newBuilder()
-            .verb(this.verb)
+            .verb(this.http.method())
             .uri(this.getRenderedPath(args));
             
             this.getQueryParameters(args).forEach((k,v) -> {
@@ -208,12 +171,6 @@ class JerseyInvocationHandler implements InvocationHandler{
             HttpRequest request = requestBuilder.build();
             return request;
         }
-        
-        @Override
-        public String toString() {
-            return "HttpRequest [path=" + path + ", parameters=" + parameters + "]";
-        }
-
 
         public Map<String,String> getQueryParameters(Object[] args) {
             
