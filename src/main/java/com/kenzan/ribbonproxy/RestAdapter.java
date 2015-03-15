@@ -27,6 +27,7 @@ public class RestAdapter {
         
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T create(Class<T> clientClass) {
 
         InvocationHandler invocationHandler = new JerseyInvocationHandler(this.namedClient);

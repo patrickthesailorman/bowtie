@@ -1,6 +1,5 @@
 package com.kenzan.ribbonproxy;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -10,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.core.UriBuilder;
@@ -25,7 +23,6 @@ import com.kenzan.ribbonproxy.annotation.Query;
 import com.netflix.client.ClientFactory;
 import com.netflix.client.http.HttpRequest;
 import com.netflix.client.http.HttpRequest.Builder;
-import com.netflix.client.http.HttpRequest.Verb;
 import com.netflix.client.http.HttpResponse;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
@@ -72,7 +69,7 @@ class JerseyInvocationHandler implements InvocationHandler{
     private class MethodInfo{
         
         private final Parameter[] parameters;
-        private final Class responseClass;
+        private final Class<?> responseClass;
         private final Map<String, String> headers;
         private final Http http;
 
@@ -98,17 +95,18 @@ class JerseyInvocationHandler implements InvocationHandler{
         
         private String getRenderedPath(final Object[] args) {
             
-            final List<Object> pathArgs = new ArrayList<>();
+            final Map<String, Object> map = new HashMap<>();
             
             for(int i = 0; i < parameters.length; i++){
-                final Parameter parameter = parameters[i];
-                if(parameter.getAnnotation(Path.class) != null){
-                    pathArgs.add(args[i]);
-                }
+                final int count = i;
+                Optional.ofNullable(parameters[count].getAnnotation(Path.class))
+                .ifPresent(p -> {
+                    map.put(p.value(), args[count]);
+                });
             }
             
             String renderedPath = UriBuilder.fromPath(http.uriTemplate())
-                            .buildFromEncoded(pathArgs.toArray())
+                            .buildFromEncodedMap(map)
                             .toString();
             return renderedPath;
 

@@ -8,6 +8,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.kenzan.ribbonproxy.model.FakeUser;
+import com.kenzan.ribbonproxy.model.FakeUserAddress;
 import com.kenzan.ribbonproxy.model.FakeUsers;
 import com.netflix.client.http.HttpResponse;
 import com.netflix.config.ConfigurationManager;
@@ -34,6 +35,14 @@ public class RestAdapterTest {
         FakeUser user = fakeClient.getUser("jdoe");
         Assert.assertThat(user.getName(), IsEqual.equalTo("John Doe"));
     }
+    
+    
+    @Test
+    public void testGetUserAddress() {
+        FakeUserAddress address = fakeClient.getUserAddress("jdoe","address");
+        Assert.assertThat(address.getAddress(), IsEqual.equalTo("1060 W Addison St, Chicago, IL 60613"));
+    }
+    
     
     @Test
     public void testGetUsers() {

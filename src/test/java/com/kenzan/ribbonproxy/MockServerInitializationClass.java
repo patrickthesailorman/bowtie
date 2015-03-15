@@ -15,17 +15,19 @@ public class MockServerInitializationClass implements ExpectationInitializer {
         
         getUser(mockServerClient);
         
+        getUserAddress(mockServerClient);
+        
         getUsers(mockServerClient);
         
         emailUser(mockServerClient);
-        
-        mockServerClient.dumpToLog();
         
     }
 
     private void emailUser(MockServerClient mockServerClient) {
 
-        mockServerClient.when(
+        mockServerClient.
+        dumpToLog().
+        when(
             HttpRequest.request()
             .withMethod("POST")
             .withPath("/user/email")
@@ -40,7 +42,9 @@ public class MockServerInitializationClass implements ExpectationInitializer {
 
     private void getUsers(MockServerClient mockServerClient) {
 
-        mockServerClient.when(
+        mockServerClient
+        .dumpToLog()
+        .when(
             HttpRequest.request()
             .withMethod("GET")
             .withPath("/user")
@@ -56,7 +60,9 @@ public class MockServerInitializationClass implements ExpectationInitializer {
 
     private void getUser(MockServerClient mockServerClient) {
 
-        mockServerClient.when(
+        mockServerClient
+        .dumpToLog()
+        .when(
             HttpRequest.request()
             .withMethod("GET")
             .withHeader(Header.header("X-SESSION-ID", "55892d6d-77df-4617-b728-6f5de97f5752"))
@@ -66,6 +72,23 @@ public class MockServerInitializationClass implements ExpectationInitializer {
             HttpResponse.response()
             .withStatusCode(200)
             .withBody("{ \"name\" : \"John Doe\" }")
+        );
+    }
+    
+    
+    private void getUserAddress(MockServerClient mockServerClient) {
+
+        mockServerClient
+        .dumpToLog()
+        .when(
+            HttpRequest.request()
+            .withMethod("GET")
+            .withPath("/user/address/jdoe"),
+            Times.unlimited()
+        ).respond(
+            HttpResponse.response()
+            .withStatusCode(200)
+            .withBody("{ \"address\" : \"1060 W Addison St, Chicago, IL 60613\" }")
         );
     }
 }
