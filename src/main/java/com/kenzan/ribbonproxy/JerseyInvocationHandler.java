@@ -1,6 +1,5 @@
 package com.kenzan.ribbonproxy;
 
-import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -28,10 +27,47 @@ import com.netflix.client.http.HttpRequest;
 import com.netflix.client.http.HttpRequest.Builder;
 import com.netflix.client.http.HttpRequest.Verb;
 import com.netflix.client.http.HttpResponse;
+import com.netflix.hystrix.HystrixCommand;
+import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.niws.client.http.RestClient;
 import com.sun.jersey.api.client.filter.LoggingFilter;
 
 class JerseyInvocationHandler implements InvocationHandler{
+    
+    
+    private class JerseyHystrixCommand extends HystrixCommand<Object>{
+
+        private final MethodInfo methodInfo;
+        private final Object[] args;
+
+        public JerseyHystrixCommand(final String groupKey, final String commandKey, final MethodInfo methodInfo, final Object[] args) {
+            super(Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey(groupKey))
+                .andCommandKey(HystrixCommandKey.Factory.asKey(commandKey)));
+            this.methodInfo = methodInfo;
+            this.args = args;
+        }
+        
+        @Override
+        protected Object run() throws Exception {
+
+            restClient.getJerseyClient()
+                .addFilter(new LoggingFilter(System.out));  //XXX change to logger make configurable from the adapter?
+
+            final HttpRequest request = methodInfo.toHttpRequest(args);
+            final HttpResponse httpResponse = restClient.executeWithLoadBalancer(request);
+
+            final Object object;
+            if (HttpResponse.class.equals(methodInfo.responseClass)) {
+                object = httpResponse;
+            } else {
+                object = objectMapper.reader(methodInfo.responseClass).readValue(httpResponse.getInputStream());
+            }
+
+            return object;
+        }
+        
+    }
     
     private class MethodInfo{
         
@@ -213,21 +249,6 @@ class JerseyInvocationHandler implements InvocationHandler{
             cache.put(method, methodInfo);
         }
         
-        restClient.getJerseyClient()
-            .addFilter(new LoggingFilter(System.out));  //XXX change to logger make configurable from the adapter?
-        
-        final HttpRequest request = methodInfo.toHttpRequest(args);
-        final HttpResponse httpResponse = restClient.executeWithLoadBalancer(request);
-        
-        final Object object;
-        if(HttpResponse.class.equals(methodInfo.responseClass)){
-            object = httpResponse;
-        }else{
-            object = objectMapper.reader(methodInfo.responseClass).readValue(httpResponse.getInputStream());
-        }
-        
-        return object;
+        return new JerseyHystrixCommand("GroupKey", "CommandKey", methodInfo, args).execute();
     }
-
-      
 }

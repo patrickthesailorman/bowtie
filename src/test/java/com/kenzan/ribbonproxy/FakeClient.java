@@ -22,7 +22,6 @@ public interface FakeClient {
     public FakeUsers getUsers(@Query("byUsername") String username, 
                               @Header(name="X-SESSION-ID") String sessionId);
     
-    
     @POST("/user/email")
     public HttpResponse emailUser(@Body FakeUser user);
     
