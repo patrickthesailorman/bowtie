@@ -15,9 +15,11 @@ public interface FakeClient {
 
     @Http(
         method = Verb.GET,
-        uriTemplate = "/user/{name}"
+        uriTemplate = "/user/{name}",
+        headers = {
+            @Header(name="X-SESSION-ID", value="55892d6d-77df-4617-b728-6f5de97f5752")
+        }
     )
-    @Header(name="X-SESSION-ID", value="55892d6d-77df-4617-b728-6f5de97f5752")
     public FakeUser getUser(@Path("username") String name);
     
     

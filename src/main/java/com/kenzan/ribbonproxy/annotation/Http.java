@@ -11,6 +11,11 @@ import com.netflix.client.http.HttpRequest.Verb;
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Http {
+    
     public Verb method();
+    
     public String uriTemplate();
+    
+    public Header[] headers() default {};
+    
 }

@@ -88,13 +88,11 @@ class JerseyInvocationHandler implements InvocationHandler{
             this.responseClass = method.getReturnType();
             this.parameters = method.getParameters();
             
-            headers = Arrays.stream(
-                method.getAnnotationsByType(Header.class))
+            headers = Arrays.stream(http.headers())
                 .collect(Collectors.toMap(
                     t -> t.name(), 
                     t -> t.value()
                 ));
-            
         }
         
         
