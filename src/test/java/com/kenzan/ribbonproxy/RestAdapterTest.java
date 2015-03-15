@@ -50,6 +50,7 @@ public class RestAdapterTest {
         Assert.assertThat(users.getUsers().size(), IsEqual.equalTo(1));
     }
     
+    
     @Test
     public void emailUser() {
         FakeUser user = new FakeUser();

@@ -3,12 +3,11 @@ package com.kenzan.ribbonproxy;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.core.UriBuilder;
@@ -18,6 +17,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import com.kenzan.ribbonproxy.annotation.Body;
 import com.kenzan.ribbonproxy.annotation.Header;
 import com.kenzan.ribbonproxy.annotation.Http;
+import com.kenzan.ribbonproxy.annotation.Hystrix;
 import com.kenzan.ribbonproxy.annotation.Path;
 import com.kenzan.ribbonproxy.annotation.Query;
 import com.netflix.client.ClientFactory;
@@ -25,6 +25,7 @@ import com.netflix.client.http.HttpRequest;
 import com.netflix.client.http.HttpRequest.Builder;
 import com.netflix.client.http.HttpResponse;
 import com.netflix.hystrix.HystrixCommand;
+import com.netflix.hystrix.HystrixCommand.Setter;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.niws.client.http.RestClient;
@@ -32,15 +33,13 @@ import com.sun.jersey.api.client.filter.LoggingFilter;
 
 class JerseyInvocationHandler implements InvocationHandler{
     
-    
     private class JerseyHystrixCommand extends HystrixCommand<Object>{
 
         private final MethodInfo methodInfo;
         private final Object[] args;
 
-        public JerseyHystrixCommand(final String groupKey, final String commandKey, final MethodInfo methodInfo, final Object[] args) {
-            super(Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey(groupKey))
-                .andCommandKey(HystrixCommandKey.Factory.asKey(commandKey)));
+        public JerseyHystrixCommand(final MethodInfo methodInfo, final Object[] args) {
+            super(methodInfo.setter);
             this.methodInfo = methodInfo;
             this.args = args;
         }
@@ -67,20 +66,32 @@ class JerseyInvocationHandler implements InvocationHandler{
     }
     
     private class MethodInfo{
-        
+
+        private final Setter setter;
         private final Parameter[] parameters;
         private final Class<?> responseClass;
         private final Map<String, String> headers;
         private final Http http;
+        private final Hystrix hystrix;
 
         public MethodInfo(final Method method) {
             
-            //GET VERB ANNOTATION
+            //GET HTTP ANNOTATION
             http = Arrays.stream(method.getAnnotations())
                             .filter(a -> Http.class.equals(a.annotationType()))
                             .map(a -> (Http)a)
                             .findFirst()
                             .orElseThrow(() -> new IllegalStateException("No Http annotation present."));
+            
+            //GET HYSTRIX ANNOTATION
+            hystrix = Arrays.stream(method.getAnnotations())
+                            .filter(a -> Hystrix.class.equals(a.annotationType()))
+                            .map(a -> (Hystrix)a)
+                            .findFirst()
+                            .orElseThrow(() -> new IllegalStateException("No Hystrix annotation present."));;
+            
+            this.setter = Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey(hystrix.groupKey()))
+                            .andCommandKey(HystrixCommandKey.Factory.asKey(hystrix.commandKey()));
             
             this.responseClass = method.getReturnType();
             this.parameters = method.getParameters();
@@ -168,7 +179,7 @@ class JerseyInvocationHandler implements InvocationHandler{
             return request;
         }
 
-        public Map<String,String> getQueryParameters(Object[] args) {
+        private Map<String,String> getQueryParameters(Object[] args) {
             
             final Map<String, String> paramMap = new HashMap<>();
             
@@ -182,10 +193,9 @@ class JerseyInvocationHandler implements InvocationHandler{
         }
     }
     
-    final ObjectMapper objectMapper = new ObjectMapper(); //XXX Is this thread safe?
-    private Map<Method, MethodInfo> cache = new HashMap<>();
+    private final ObjectMapper objectMapper = new ObjectMapper(); //XXX Is this thread safe?
+    private final Map<Method, MethodInfo> cache = new ConcurrentHashMap<>();
     private final RestClient restClient;
-
 
     public JerseyInvocationHandler(String namedClient) {
         restClient = (RestClient)ClientFactory.getNamedClient(namedClient);
@@ -202,6 +212,6 @@ class JerseyInvocationHandler implements InvocationHandler{
             cache.put(method, methodInfo);
         }
         
-        return new JerseyHystrixCommand("GroupKey", "CommandKey", methodInfo, args).execute();
+        return new JerseyHystrixCommand(methodInfo, args).execute();
     }
 }
