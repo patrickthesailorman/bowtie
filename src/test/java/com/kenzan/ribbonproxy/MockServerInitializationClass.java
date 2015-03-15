@@ -21,6 +21,10 @@ public class MockServerInitializationClass implements ExpectationInitializer {
         
         emailUser(mockServerClient);
         
+        deleteUser(mockServerClient);
+        
+        mutateUser(mockServerClient);
+        
     }
 
     private void emailUser(MockServerClient mockServerClient) {
@@ -91,4 +95,38 @@ public class MockServerInitializationClass implements ExpectationInitializer {
             .withBody("{ \"address\" : \"1060 W Addison St, Chicago, IL 60613\" }")
         );
     }
+    
+    private void deleteUser(MockServerClient mockServerClient) {
+
+        mockServerClient
+        .dumpToLog()
+        .when(
+            HttpRequest.request()
+            .withMethod("DELETE")
+            .withPath("/user/jdoe"),
+            Times.unlimited()
+        ).respond(
+            HttpResponse.response()
+            .withStatusCode(200)
+        );
+    }
+
+    private void mutateUser(MockServerClient mockServerClient) {
+    
+        mockServerClient.
+        dumpToLog().
+        when(
+            HttpRequest.request()
+            .withMethod("PUT")
+            .withPath("/user")
+            .withBody("{\"name\":\"John Doe\"}"),
+            Times.unlimited()
+        ).respond(
+            HttpResponse.response()
+            .withStatusCode(200)
+            
+        );        
+    }   
+    
+    
 }

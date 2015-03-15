@@ -13,6 +13,9 @@ import java.util.stream.Collectors;
 import javax.ws.rs.core.UriBuilder;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.JavaType;
+
+import rx.Observable;
 
 import com.kenzan.ribbonproxy.annotation.Body;
 import com.kenzan.ribbonproxy.annotation.Header;
@@ -73,6 +76,7 @@ class JerseyInvocationHandler implements InvocationHandler{
         private final Map<String, String> headers;
         private final Http http;
         private final Hystrix hystrix;
+        private final boolean isObservable;
 
         public MethodInfo(final Method method) {
             
@@ -93,16 +97,25 @@ class JerseyInvocationHandler implements InvocationHandler{
             this.setter = Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey(hystrix.groupKey()))
                             .andCommandKey(HystrixCommandKey.Factory.asKey(hystrix.commandKey()));
             
-            this.responseClass = method.getReturnType();
             this.parameters = method.getParameters();
             
-            headers = Arrays.stream(http.headers())
+            this.headers = Arrays.stream(http.headers())
                 .collect(Collectors.toMap(
                     t -> t.name(), 
                     t -> t.value()
                 ));
+            
+            final Class returnType = method.getReturnType();
+            final Class httpClass = Class.class.equals(http.responseClass()) ? null : http.responseClass();
+            
+            this.isObservable = Observable.class.equals(returnType);
+            if(this.isObservable){
+                this.responseClass = Optional.ofNullable(httpClass).orElseThrow(() ->
+                        new IllegalStateException("Http responseClass is required for observables"));
+            }else{
+                this.responseClass = Optional.ofNullable(httpClass).orElse(returnType);
+            }
         }
-        
         
         private String getRenderedPath(final Object[] args) {
             
@@ -212,6 +225,7 @@ class JerseyInvocationHandler implements InvocationHandler{
             cache.put(method, methodInfo);
         }
         
-        return new JerseyHystrixCommand(methodInfo, args).execute();
+        JerseyHystrixCommand command = new JerseyHystrixCommand(methodInfo, args);
+        return methodInfo.isObservable ? command.observe() : command.execute();
     }
 }
