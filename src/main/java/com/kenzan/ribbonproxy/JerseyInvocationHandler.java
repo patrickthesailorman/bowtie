@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.core.UriBuilder;
@@ -19,7 +18,6 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 import rx.Observable;
 
-import com.google.common.base.Strings;
 import com.kenzan.ribbonproxy.annotation.Body;
 import com.kenzan.ribbonproxy.annotation.Cookie;
 import com.kenzan.ribbonproxy.annotation.Header;
@@ -27,6 +25,7 @@ import com.kenzan.ribbonproxy.annotation.Http;
 import com.kenzan.ribbonproxy.annotation.Hystrix;
 import com.kenzan.ribbonproxy.annotation.Path;
 import com.kenzan.ribbonproxy.annotation.Query;
+import com.kenzan.ribbonproxy.serializer.MessageSerializer;
 import com.netflix.client.ClientFactory;
 import com.netflix.client.http.HttpRequest;
 import com.netflix.client.http.HttpRequest.Builder;
@@ -64,7 +63,7 @@ class JerseyInvocationHandler implements InvocationHandler{
             if (HttpResponse.class.equals(methodInfo.responseClass)) {
                 object = httpResponse;
             } else {
-                object = objectMapper.reader(methodInfo.responseClass).readValue(httpResponse.getInputStream());
+                object = messageSerializer.readValue(methodInfo.responseClass, httpResponse.getInputStream());
             }
 
             return object;
@@ -211,7 +210,7 @@ class JerseyInvocationHandler implements InvocationHandler{
             this.getBody(args).ifPresent(t -> {
                 try {
                     requestBuilder
-                    .entity(objectMapper.writeValueAsString(t));
+                    .entity(messageSerializer.writeValue(t));
                 } catch (Exception e) {
                     e.printStackTrace();  ///XXX: decide there is better exception handling
                 }
@@ -252,8 +251,10 @@ class JerseyInvocationHandler implements InvocationHandler{
     private final ObjectMapper objectMapper = new ObjectMapper(); //XXX Is this thread safe?
     private final Map<Method, MethodInfo> cache = new ConcurrentHashMap<>();
     private final RestClient restClient;
+    private final MessageSerializer messageSerializer;
 
-    public JerseyInvocationHandler(String namedClient) {
+    public JerseyInvocationHandler(String namedClient, MessageSerializer messageSerializer) {
+        this.messageSerializer = messageSerializer;
         restClient = (RestClient)ClientFactory.getNamedClient(namedClient);
     }
 
