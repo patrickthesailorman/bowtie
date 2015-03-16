@@ -10,3 +10,9 @@
 mvn mockserver:run
 ```
 * Mock server is automatically started during "mvn test" and "mvn verify" lifescycles
+
+
+##Backlog
+* Create logger format
+* Add gzip support
+* Add interface for pre/post classes to allow manipulating request/response during executions

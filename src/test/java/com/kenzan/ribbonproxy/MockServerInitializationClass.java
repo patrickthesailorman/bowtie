@@ -110,6 +110,7 @@ public class MockServerInitializationClass implements ExpectationInitializer {
             Times.unlimited()
         ).respond(
             HttpResponse.response()
+            .withCookie(Cookie.cookie("logout", "now"))
             .withStatusCode(200)
         );
     }

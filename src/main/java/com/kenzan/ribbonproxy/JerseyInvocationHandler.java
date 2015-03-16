@@ -14,8 +14,6 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.core.UriBuilder;
 
-import org.codehaus.jackson.map.ObjectMapper;
-
 import rx.Observable;
 
 import com.kenzan.ribbonproxy.annotation.Body;
@@ -35,12 +33,11 @@ import com.netflix.hystrix.HystrixCommand.Setter;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.niws.client.http.RestClient;
-import com.sun.jersey.api.client.filter.LoggingFilter;
 
 class JerseyInvocationHandler implements InvocationHandler{
     
     private class JerseyHystrixCommand extends HystrixCommand<Object>{
-
+        
         private final MethodInfo methodInfo;
         private final Object[] args;
 
@@ -53,8 +50,7 @@ class JerseyInvocationHandler implements InvocationHandler{
         @Override
         protected Object run() throws Exception {
 
-            restClient.getJerseyClient()
-                .addFilter(new LoggingFilter(System.out));  //XXX change to logger make configurable from the adapter?
+            restClient.getJerseyClient().addFilter(new LoggerFilter()); 
 
             final HttpRequest request = methodInfo.toHttpRequest(args);
             final HttpResponse httpResponse = restClient.executeWithLoadBalancer(request);
@@ -117,8 +113,9 @@ class JerseyInvocationHandler implements InvocationHandler{
                 .map(cookie -> cookie.name() + "=" + cookie.value())
                 .collect(Collectors.toList()));
             
-            
+            @SuppressWarnings("rawtypes")
             final Class returnType = method.getReturnType();
+            @SuppressWarnings("rawtypes")
             final Class httpClass = Class.class.equals(http.responseClass()) ? null : http.responseClass();
             
             this.isObservable = Observable.class.equals(returnType);
@@ -248,7 +245,6 @@ class JerseyInvocationHandler implements InvocationHandler{
         }
     }
     
-    private final ObjectMapper objectMapper = new ObjectMapper(); //XXX Is this thread safe?
     private final Map<Method, MethodInfo> cache = new ConcurrentHashMap<>();
     private final RestClient restClient;
     private final MessageSerializer messageSerializer;
