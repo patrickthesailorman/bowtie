@@ -3,21 +3,25 @@ package com.kenzan.ribbonproxy;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.core.UriBuilder;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.JavaType;
 
 import rx.Observable;
 
+import com.google.common.base.Strings;
 import com.kenzan.ribbonproxy.annotation.Body;
+import com.kenzan.ribbonproxy.annotation.Cookie;
 import com.kenzan.ribbonproxy.annotation.Header;
 import com.kenzan.ribbonproxy.annotation.Http;
 import com.kenzan.ribbonproxy.annotation.Hystrix;
@@ -77,6 +81,7 @@ class JerseyInvocationHandler implements InvocationHandler{
         private final Http http;
         private final Hystrix hystrix;
         private final boolean isObservable;
+        private List<String> cookies = new ArrayList<>();
 
         public MethodInfo(final Method method) {
             
@@ -92,7 +97,7 @@ class JerseyInvocationHandler implements InvocationHandler{
                             .filter(a -> Hystrix.class.equals(a.annotationType()))
                             .map(a -> (Hystrix)a)
                             .findFirst()
-                            .orElseThrow(() -> new IllegalStateException("No Hystrix annotation present."));;
+                            .orElseThrow(() -> new IllegalStateException("No Hystrix annotation present."));
             
             this.setter = Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey(hystrix.groupKey()))
                             .andCommandKey(HystrixCommandKey.Factory.asKey(hystrix.commandKey()));
@@ -104,6 +109,15 @@ class JerseyInvocationHandler implements InvocationHandler{
                     t -> t.name(), 
                     t -> t.value()
                 ));
+
+            if(headers.containsKey("Cookie")){
+                cookies.add(this.headers.remove("Cookie"));
+            }
+            
+            cookies.addAll(Arrays.stream(http.cookies())
+                .map(cookie -> cookie.name() + "=" + cookie.value())
+                .collect(Collectors.toList()));
+            
             
             final Class returnType = method.getReturnType();
             final Class httpClass = Class.class.equals(http.responseClass()) ? null : http.responseClass();
@@ -179,6 +193,21 @@ class JerseyInvocationHandler implements InvocationHandler{
                 requestBuilder.header(k, v);
             });
             
+            
+            //Cookies
+            List<String> requestCookies = new ArrayList<>();
+            requestCookies.addAll(cookies);
+            
+            requestCookies.addAll(this.getCookies(args).entrySet().stream().map(entry -> 
+              entry.getKey() + "=" + entry.getValue()  
+            ).collect(Collectors.toList()));
+            
+            if(!requestCookies.isEmpty()){
+                requestBuilder.header("Cookie", requestCookies.stream().collect(Collectors.joining(";")));
+            }
+            
+            
+            //Body
             this.getBody(args).ifPresent(t -> {
                 try {
                     requestBuilder
@@ -191,7 +220,7 @@ class JerseyInvocationHandler implements InvocationHandler{
             HttpRequest request = requestBuilder.build();
             return request;
         }
-
+        
         private Map<String,String> getQueryParameters(Object[] args) {
             
             final Map<String, String> paramMap = new HashMap<>();
@@ -203,6 +232,20 @@ class JerseyInvocationHandler implements InvocationHandler{
                 }
             }
             return paramMap;
+        }
+
+        private Map<String, String> getCookies(final Object[] args){
+            Map<String, String> allHeaders = this.headers;
+            
+            for(int i = 0; i < parameters.length; i++){
+                final Parameter parameter = parameters[i];
+                Cookie annotation = parameter.getAnnotation(Cookie.class);
+                if(annotation != null){
+                    allHeaders.put(annotation.name(), String.valueOf(args[i]));
+                }
+            }
+            
+            return allHeaders;
         }
     }
     

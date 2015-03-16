@@ -20,6 +20,7 @@ import com.netflix.config.ConfigurationManager;
 public class RestAdapterTest {
     
     private static FakeClient fakeClient;
+    private static FakeUser user;
     
     @BeforeClass
     public static void beforeClass() throws IOException{
@@ -30,6 +31,9 @@ public class RestAdapterTest {
                         .setNamedClient("sample-client")
                         .build();
         fakeClient = restAdapter.create(FakeClient.class);
+        
+        user = new FakeUser();
+        user.setName("John Doe");
     }
     
 
@@ -65,9 +69,6 @@ public class RestAdapterTest {
     
     @Test
     public void testEmailUser() {
-        FakeUser user = new FakeUser();
-        user.setName("John Doe");
-        
         HttpResponse response = fakeClient.emailUser(user);
         Assert.assertThat(response.getStatus(), IsEqual.equalTo(200));
     }
@@ -76,6 +77,12 @@ public class RestAdapterTest {
     @Test
     public void testDeleteUser() {
         HttpResponse response = fakeClient.deleteUser("jdoe");
+        Assert.assertThat(response.getStatus(), IsEqual.equalTo(200));
+    }
+    
+    @Test
+    public void testMutateUser() {
+        HttpResponse response = fakeClient.mutateUser(user,"aa8a2e85-412e-46a2-889f-b2c133a59c89");
         Assert.assertThat(response.getStatus(), IsEqual.equalTo(200));
     }
     

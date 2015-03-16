@@ -1,5 +1,4 @@
 .classpath
 .settings
 .project
-mockserver.log
-mockserver_request.log
+mockserver*log
