@@ -3,6 +3,7 @@ package com.kenzan.ribbonproxy;
 import rx.Observable;
 
 import com.kenzan.ribbonproxy.annotation.Body;
+import com.kenzan.ribbonproxy.annotation.Cookie;
 import com.kenzan.ribbonproxy.annotation.Header;
 import com.kenzan.ribbonproxy.annotation.Http;
 import com.kenzan.ribbonproxy.annotation.Hystrix;
@@ -77,13 +78,19 @@ public interface FakeClient {
     @Hystrix(
         groupKey=GROUP_KEY, commandKey=COMMAND_KEY
         )
-    public HttpResponse mutateUser(@Body FakeUser user);
+    public HttpResponse mutateUser(@Body FakeUser user, @Cookie(name="session") String sessionId);
     
     
 
     @Http(
         method = Verb.POST,
-        uriTemplate = "/user/email"
+        uriTemplate = "/user/email",
+        headers={
+          @Header(name="Cookie",value="username=jdoe")  
+        },
+        cookies={
+            @Cookie(name="session", value="0a1bc2a7-11ef-4781-9c06-8d9b42719797")
+        }
     )
     @Hystrix(
         groupKey=GROUP_KEY, commandKey=COMMAND_KEY

@@ -3,6 +3,7 @@ package com.kenzan.ribbonproxy;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.initialize.ExpectationInitializer;
 import org.mockserver.matchers.Times;
+import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -34,6 +35,8 @@ public class MockServerInitializationClass implements ExpectationInitializer {
         when(
             HttpRequest.request()
             .withMethod("POST")
+            .withCookie(Cookie.cookie("session", "0a1bc2a7-11ef-4781-9c06-8d9b42719797"))
+            .withCookie(Cookie.cookie("username", "jdoe"))
             .withPath("/user/email")
             .withBody("{\"name\":\"John Doe\"}"),
             Times.unlimited()
@@ -118,6 +121,7 @@ public class MockServerInitializationClass implements ExpectationInitializer {
         when(
             HttpRequest.request()
             .withMethod("PUT")
+            .withCookie(Cookie.cookie("session", "aa8a2e85-412e-46a2-889f-b2c133a59c89"))
             .withPath("/user")
             .withBody("{\"name\":\"John Doe\"}"),
             Times.unlimited()
