@@ -7,11 +7,10 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import rx.Observable;
-
 import com.kenzan.ribbonproxy.model.FakeUser;
 import com.kenzan.ribbonproxy.model.FakeUserAddress;
 import com.kenzan.ribbonproxy.model.FakeUsers;
+import com.kenzan.ribbonproxy.serializer.JacksonMessageSerializer;
 import com.netflix.client.http.HttpResponse;
 import com.netflix.config.ConfigurationManager;
 
@@ -29,6 +28,7 @@ public class RestAdapterTest {
         final RestAdapter restAdapter = new RestAdapter
                         .Builder()
                         .setNamedClient("sample-client")
+                        .setMessageSerializer(new JacksonMessageSerializer())
                         .build();
         fakeClient = restAdapter.create(FakeClient.class);
         
