@@ -10,6 +10,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.kenzan.ribbonproxy.annotation.Encoding;
 import com.kenzan.ribbonproxy.model.FakeUser;
 import com.kenzan.ribbonproxy.model.FakeUserAddress;
 import com.kenzan.ribbonproxy.model.FakeUsers;
@@ -24,6 +25,7 @@ public class RestAdapterTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(RestAdapterTest.class);
     
     private static FakeClient fakeClient;
+    private static FakeClient fakeClient2;
     private static FakeUser user;
     
     @BeforeClass
@@ -38,6 +40,16 @@ public class RestAdapterTest {
                         .setMessageSerializer(new JacksonMessageSerializer())
                         .build();
         fakeClient = restAdapter.create(FakeClient.class);
+        
+        
+        final RestAdapter restAdapter2 = new RestAdapter
+                        .Builder()
+                        .setNamedClient("sample-client")
+                        .setEncoding(Encoding.gzip)
+                        .setMessageSerializer(new JacksonMessageSerializer())
+                        .build();
+        fakeClient2 = restAdapter2.create(FakeClient.class);
+        
         
         user = new FakeUser();
         user.setName("John Doe");
@@ -73,7 +85,7 @@ public class RestAdapterTest {
     @Test
     public void testGetUsers() {
         LOGGER.info("Starting testGetUsers");
-        FakeUsers users = fakeClient.getUsers("bbelcher", Optional.ofNullable("email"),
+        FakeUsers users = fakeClient2.getUsers("bbelcher", Optional.ofNullable("email"),
             "020835c7-cf7e-4ba5-b117-4402e5d79079");
         Assert.assertThat(users.getUsers().size(), IsEqual.equalTo(2));
     }

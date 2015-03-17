@@ -50,8 +50,6 @@ class JerseyInvocationHandler implements InvocationHandler{
         @Override
         protected Object run() throws Exception {
 
-            restClient.getJerseyClient().addFilter(new LoggerFilter()); 
-
             final HttpRequest request = methodInfo.toHttpRequest(args);
             final HttpResponse httpResponse = restClient.executeWithLoadBalancer(request);
 
@@ -270,9 +268,9 @@ class JerseyInvocationHandler implements InvocationHandler{
     private final RestClient restClient;
     private final MessageSerializer messageSerializer;
 
-    public JerseyInvocationHandler(String namedClient, MessageSerializer messageSerializer) {
+    public JerseyInvocationHandler(RestClient restClient, MessageSerializer messageSerializer) {
         this.messageSerializer = messageSerializer;
-        restClient = (RestClient)ClientFactory.getNamedClient(namedClient);
+        this.restClient = restClient;
     }
 
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
