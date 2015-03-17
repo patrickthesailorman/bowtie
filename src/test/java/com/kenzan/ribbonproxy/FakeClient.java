@@ -1,5 +1,7 @@
 package com.kenzan.ribbonproxy;
 
+import java.util.Optional;
+
 import rx.Observable;
 
 import com.kenzan.ribbonproxy.annotation.Body;
@@ -68,9 +70,23 @@ public interface FakeClient {
         groupKey=GROUP_KEY, commandKey=COMMAND_KEY
         )
     public FakeUsers getUsers(@Query("byUsername") String username, 
+                              @Query("bySystem") Optional<String> system,
                               @Header(name="X-SESSION-ID") String sessionId);
     
     
+    
+    
+    @Http(
+        method = Verb.GET,
+        uriTemplate = "/user/role"
+    )
+    @Hystrix(
+        groupKey=GROUP_KEY, commandKey=COMMAND_KEY
+        )
+    public FakeUsers getRoleUsers(@Query("byRole") com.google.common.base.Optional<String> role);
+    
+                              
+                              
     @Http(
         method = Verb.PUT,
         uriTemplate = "/user"

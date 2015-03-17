@@ -224,7 +224,28 @@ class JerseyInvocationHandler implements InvocationHandler{
             for(int i = 0; i < parameters.length; i++){
                 final Query queryParam = parameters[i].getAnnotation(Query.class);
                 if(queryParam != null){
-                    paramMap.put(queryParam.value(), String.valueOf(args[i]));
+                    final Object arg = args[i];
+                    
+                    if(arg != null){
+                        Optional<Object> value = Optional.empty();
+                        if(Optional.class.equals(arg.getClass())){
+                            final Optional optional = ((Optional)arg);
+                            
+                            if(optional.isPresent()){
+                                value = optional;
+                            }
+                        }else if(com.google.common.base.Optional.class.isAssignableFrom(arg.getClass())){
+                            final com.google.common.base.Optional optional = ((com.google.common.base.Optional)arg);
+                            
+                            if(optional.isPresent()){
+                                value = Optional.ofNullable(optional.get());
+                            }
+                        }else{
+                            value = Optional.ofNullable(arg);
+                        }
+
+                        value.ifPresent(v -> paramMap.put(queryParam.value(), String.valueOf(v)) );
+                    }
                 }
             }
             return paramMap;

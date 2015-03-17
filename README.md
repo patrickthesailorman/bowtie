@@ -13,6 +13,8 @@ mvn mockserver:run
 
 
 ##Backlog
-* Create logger format
 * Add gzip support
 * Add interface for pre/post classes to allow manipulating request/response during executions
+* Add caching support (only honor max-age for now)
+** http://hc.apache.org/httpcomponents-client-ga/tutorial/html/caching.html
+** http://hc.apache.org/httpcomponents-client-ga/httpclient-cache/apidocs/org/apache/http/impl/client/cache/memcached/MemcachedHttpCacheStorage.html
