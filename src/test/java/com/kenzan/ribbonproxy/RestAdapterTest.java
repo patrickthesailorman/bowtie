@@ -1,6 +1,7 @@
 package com.kenzan.ribbonproxy;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.hamcrest.core.IsEqual;
 import org.junit.Assert;
@@ -72,8 +73,25 @@ public class RestAdapterTest {
     @Test
     public void testGetUsers() {
         LOGGER.info("Starting testGetUsers");
-        FakeUsers users = fakeClient.getUsers("jdoe","020835c7-cf7e-4ba5-b117-4402e5d79079");
+        FakeUsers users = fakeClient.getUsers("bbelcher", Optional.ofNullable("email"),
+            "020835c7-cf7e-4ba5-b117-4402e5d79079");
+        Assert.assertThat(users.getUsers().size(), IsEqual.equalTo(2));
+    }
+    
+    
+    @Test
+    public void testGetUsersOptional() {
+        LOGGER.info("Starting testGetUsersOptional");
+        FakeUsers users = fakeClient.getUsers("jdoe", Optional.empty(),
+            "020835c7-cf7e-4ba5-b117-4402e5d79079");
         Assert.assertThat(users.getUsers().size(), IsEqual.equalTo(1));
+    }
+    
+    @Test
+    public void testGetRoleUsers() {
+        LOGGER.info("Starting testGetRoleUsers");
+        FakeUsers users = fakeClient.getRoleUsers(com.google.common.base.Optional.fromNullable("vanessa"));
+        Assert.assertThat(users.getUsers().size(), IsEqual.equalTo(0));
     }
     
     

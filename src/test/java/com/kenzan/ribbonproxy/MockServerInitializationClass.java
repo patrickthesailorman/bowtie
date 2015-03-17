@@ -20,11 +20,15 @@ public class MockServerInitializationClass implements ExpectationInitializer {
         
         getUsers(mockServerClient);
         
+        getUsersWithSystem(mockServerClient);
+        
         emailUser(mockServerClient);
         
         deleteUser(mockServerClient);
         
         mutateUser(mockServerClient);
+        
+        getRoleUsers(mockServerClient);
         
     }
 
@@ -131,6 +135,42 @@ public class MockServerInitializationClass implements ExpectationInitializer {
             .withStatusCode(200)
             
         );        
+    }
+
+    private void getUsersWithSystem(MockServerClient mockServerClient) {
+    
+        mockServerClient
+        .dumpToLog()
+        .when(
+            HttpRequest.request()
+            .withMethod("GET")
+            .withPath("/user")
+            .withHeader(Header.header("X-SESSION-ID", "020835c7-cf7e-4ba5-b117-4402e5d79079"))
+            .withQueryStringParameter(Parameter.param("byUsername", "bbelcher"))
+            .withQueryStringParameter(Parameter.param("bySystem", "email")),
+            Times.unlimited()
+        ).respond(
+            HttpResponse.response()
+            .withStatusCode(200)
+            .withBody("{ \"users\" : [{ \"name\" : \"John Doe\" },{ \"name\" : \"Bob Belcher\" }] }")
+        );
+    }
+
+    private void getRoleUsers(MockServerClient mockServerClient) {
+    
+        mockServerClient
+        .dumpToLog()
+        .when(
+            HttpRequest.request()
+            .withMethod("GET")
+            .withPath("/user/role")
+            .withQueryStringParameter(Parameter.param("byRole", "vanessa")),
+            Times.unlimited()
+        ).respond(
+            HttpResponse.response()
+            .withStatusCode(200)
+            .withBody("{ \"users\" : [] }")
+        );
     }   
     
     
