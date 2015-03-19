@@ -34,23 +34,17 @@ public class RestAdapterTest {
         LOGGER.info("Starting beforeClass");
         ConfigurationManager.loadPropertiesFromResources("sample-client.properties");
         
-        final RestAdapter restAdapter = new RestAdapter
-                        .Builder()
-                        .setNamedClient("sample-client")
-                        .setMessageSerializer(new JacksonMessageSerializer())
-                        .build();
+        final RestAdapter restAdapter = RestAdapter.getNamedAdapter("sample-client", RestAdapterConfig.createDefault());
         fakeClient = restAdapter.create(FakeClient.class);
-        
-        
-        final RestAdapter restAdapter2 = new RestAdapter
-                        .Builder()
-                        .setNamedClient("sample-client")
-                        .setEncoding(Encoding.gzip)
-                        .setMessageSerializer(new JacksonMessageSerializer())
-                        .build();
+
+
+        final RestAdapter restAdapter2 = RestAdapter.getNamedAdapter("sample-client", RestAdapterConfig.custom()
+                        .withMessageSerializer(new JacksonMessageSerializer())
+                        .withEncoding(Encoding.gzip)
+                        .build());
+
         fakeClient2 = restAdapter2.create(FakeClient.class);
-        
-        
+
         user = new FakeUser();
         user.setName("John Doe");
     }

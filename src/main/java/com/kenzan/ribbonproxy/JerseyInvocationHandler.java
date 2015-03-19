@@ -1,5 +1,24 @@
 package com.kenzan.ribbonproxy;
 
+import com.kenzan.ribbonproxy.annotation.Body;
+import com.kenzan.ribbonproxy.annotation.CacheKey;
+import com.kenzan.ribbonproxy.annotation.Cookie;
+import com.kenzan.ribbonproxy.annotation.Header;
+import com.kenzan.ribbonproxy.annotation.Http;
+import com.kenzan.ribbonproxy.annotation.Hystrix;
+import com.kenzan.ribbonproxy.annotation.Path;
+import com.kenzan.ribbonproxy.annotation.Query;
+import com.kenzan.ribbonproxy.cache.RestCache;
+import com.kenzan.ribbonproxy.cache.RestCachingPolicy;
+import com.netflix.client.http.HttpRequest;
+import com.netflix.client.http.HttpRequest.Builder;
+import com.netflix.client.http.HttpResponse;
+import com.netflix.hystrix.HystrixCommand;
+import com.netflix.hystrix.HystrixCommand.Setter;
+import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixCommandKey;
+import com.netflix.niws.client.http.RestClient;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -15,24 +34,6 @@ import java.util.stream.Collectors;
 import javax.ws.rs.core.UriBuilder;
 
 import rx.Observable;
-
-import com.kenzan.ribbonproxy.annotation.Body;
-import com.kenzan.ribbonproxy.annotation.Cookie;
-import com.kenzan.ribbonproxy.annotation.Header;
-import com.kenzan.ribbonproxy.annotation.Http;
-import com.kenzan.ribbonproxy.annotation.Hystrix;
-import com.kenzan.ribbonproxy.annotation.Path;
-import com.kenzan.ribbonproxy.annotation.Query;
-import com.kenzan.ribbonproxy.serializer.MessageSerializer;
-import com.netflix.client.ClientFactory;
-import com.netflix.client.http.HttpRequest;
-import com.netflix.client.http.HttpRequest.Builder;
-import com.netflix.client.http.HttpResponse;
-import com.netflix.hystrix.HystrixCommand;
-import com.netflix.hystrix.HystrixCommand.Setter;
-import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixCommandKey;
-import com.netflix.niws.client.http.RestClient;
 
 class JerseyInvocationHandler implements InvocationHandler{
     
@@ -51,13 +52,31 @@ class JerseyInvocationHandler implements InvocationHandler{
         protected Object run() throws Exception {
 
             final HttpRequest request = methodInfo.toHttpRequest(args);
+            final String cacheKey = methodInfo.getCacheKey(args);
+
+            final RestCache cache = restAdapterConfig.getRibbonCache();
+            final RestCachingPolicy cachingPolicy = new RestCachingPolicy();
+
+            if (cache != null) {
+
+                final Optional<Object> cachedObject = cache.get(cacheKey);
+
+                if (cachedObject.isPresent()) {
+                    return cachedObject.get();
+                }
+            }
+
             final HttpResponse httpResponse = restClient.executeWithLoadBalancer(request);
 
             final Object object;
             if (HttpResponse.class.equals(methodInfo.responseClass)) {
                 object = httpResponse;
             } else {
-                object = messageSerializer.readValue(methodInfo.responseClass, httpResponse.getInputStream());
+                object = restAdapterConfig.getMessageSerializer().readValue(methodInfo.responseClass, httpResponse.getInputStream());
+            }
+
+            if (cache != null && cachingPolicy.isCachable(httpResponse)) {
+                cache.set(cacheKey, object);
             }
 
             return object;
@@ -74,6 +93,7 @@ class JerseyInvocationHandler implements InvocationHandler{
         private final Http http;
         private final Hystrix hystrix;
         private final boolean isObservable;
+        private final String cacheKeyOverride;
         private List<String> cookies = new ArrayList<>();
 
         public MethodInfo(final Method method) {
@@ -91,7 +111,13 @@ class JerseyInvocationHandler implements InvocationHandler{
                             .map(a -> (Hystrix)a)
                             .findFirst()
                             .orElseThrow(() -> new IllegalStateException("No Hystrix annotation present."));
-            
+
+            cacheKeyOverride = Arrays.stream(method.getAnnotations())
+                            .filter(a -> CacheKey.class.equals(a.annotationType()))
+                            .map(a -> a == null ? null : ((CacheKey)a).value())
+                            .findFirst()
+                            .orElse(null);
+
             this.setter = Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey(hystrix.groupKey()))
                             .andCommandKey(HystrixCommandKey.Factory.asKey(hystrix.commandKey()));
             
@@ -123,6 +149,7 @@ class JerseyInvocationHandler implements InvocationHandler{
             }else{
                 this.responseClass = Optional.ofNullable(httpClass).orElse(returnType);
             }
+
         }
         
         private String getRenderedPath(final Object[] args) {
@@ -172,7 +199,15 @@ class JerseyInvocationHandler implements InvocationHandler{
             return Optional.ofNullable(body);
         }
         
-        
+
+        private String getCacheKey(Object[] args) {
+            if (cacheKeyOverride != null) {
+                return cacheKeyOverride;
+            }
+
+            return this.getRenderedPath(args);
+        }
+
         private HttpRequest toHttpRequest(Object[] args) {
 
             final Builder requestBuilder = HttpRequest.newBuilder()
@@ -205,7 +240,7 @@ class JerseyInvocationHandler implements InvocationHandler{
             this.getBody(args).ifPresent(t -> {
                 try {
                     requestBuilder
-                    .entity(messageSerializer.writeValue(t));
+                    .entity(restAdapterConfig.getMessageSerializer().writeValue(t));
                 } catch (Exception e) {
                     e.printStackTrace();  ///XXX: decide there is better exception handling
                 }
@@ -225,15 +260,15 @@ class JerseyInvocationHandler implements InvocationHandler{
                     final Object arg = args[i];
                     
                     if(arg != null){
-                        Optional<Object> value = Optional.empty();
+                        Optional<?> value = Optional.empty();
                         if(Optional.class.equals(arg.getClass())){
-                            final Optional optional = ((Optional)arg);
+                            final Optional<?> optional = ((Optional<?>)arg);
                             
                             if(optional.isPresent()){
                                 value = optional;
                             }
                         }else if(com.google.common.base.Optional.class.isAssignableFrom(arg.getClass())){
-                            final com.google.common.base.Optional optional = ((com.google.common.base.Optional)arg);
+                            final com.google.common.base.Optional<?> optional = ((com.google.common.base.Optional<?>)arg);
                             
                             if(optional.isPresent()){
                                 value = Optional.ofNullable(optional.get());
@@ -266,10 +301,10 @@ class JerseyInvocationHandler implements InvocationHandler{
     
     private final Map<Method, MethodInfo> cache = new ConcurrentHashMap<>();
     private final RestClient restClient;
-    private final MessageSerializer messageSerializer;
+    private final RestAdapterConfig restAdapterConfig;
 
-    public JerseyInvocationHandler(RestClient restClient, MessageSerializer messageSerializer) {
-        this.messageSerializer = messageSerializer;
+    public JerseyInvocationHandler(RestClient restClient, RestAdapterConfig restAdapterConfig) {
+        this.restAdapterConfig = restAdapterConfig;
         this.restClient = restClient;
     }
 

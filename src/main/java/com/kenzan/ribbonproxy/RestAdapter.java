@@ -1,17 +1,16 @@
 package com.kenzan.ribbonproxy;
 
+import com.google.common.base.Preconditions;
+import com.kenzan.ribbonproxy.annotation.Encoding;
+import com.netflix.client.ClientFactory;
+import com.netflix.niws.client.http.RestClient;
+import com.sun.jersey.api.client.filter.GZIPContentEncodingFilter;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
-import com.kenzan.ribbonproxy.annotation.Encoding;
-import com.kenzan.ribbonproxy.serializer.MessageSerializer;
-import com.netflix.client.ClientFactory;
-import com.netflix.niws.client.http.RestClient;
-import com.sun.jersey.api.client.filter.GZIPContentEncodingFilter;
 
 
 public class RestAdapter {
@@ -19,59 +18,38 @@ public class RestAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(RestAdapter.class);
     
     private String namedClient;
-    private MessageSerializer messageSerializer;
-    private Encoding encoding;
+    private RestAdapterConfig restAdapterConfig;
 
-    private RestAdapter(String namedClient, MessageSerializer messageSerializer, Encoding encoding) {
+    private RestAdapter(String namedClient, RestAdapterConfig restAdapterConfig) {
         this.namedClient = namedClient;
-        this.messageSerializer = messageSerializer;
-        this.encoding = encoding;
+        this.restAdapterConfig = restAdapterConfig;
     }
 
-    public static class Builder{
-        
-        private String namedClient;
-        private MessageSerializer messageSerializer;
-        private Encoding encoding = Encoding.none;
+    public static RestAdapter getNamedAdapter(String namedAdapter) {
+        return new RestAdapter(namedAdapter, null);
+    }
 
-        public Builder setNamedClient(String namedClient){
-            this.namedClient = namedClient;
-            return this;
-        }
-        
-        public Builder setMessageSerializer(MessageSerializer messageSerializer){
-            this.messageSerializer = messageSerializer;
-            return this;
-        }
-        
-        public Builder setEncoding(Encoding encoding){
-            this.encoding = encoding;
-            return this;
-        }
-
-        public RestAdapter build() {
-            return new RestAdapter(namedClient, messageSerializer, encoding);
-        }
-        
+    public static RestAdapter getNamedAdapter(String namedAdapter, RestAdapterConfig restAdapterConfig) {
+        return new RestAdapter(namedAdapter, restAdapterConfig);
     }
 
     @SuppressWarnings("unchecked")
     public <T> T create(Class<T> clientClass) {
 
         Preconditions.checkNotNull("NamedClient required", this.namedClient);
-        Preconditions.checkNotNull("MessageSerializer required", this.messageSerializer);
+        Preconditions.checkNotNull("MessageSerializer required", this.restAdapterConfig.getMessageSerializer());
         
         LOGGER.info("Using NamedClient {}", this.namedClient);
-        LOGGER.info("Using MessageSerializer {}", this.messageSerializer);
+        LOGGER.info("Using MessageSerializer {}", this.restAdapterConfig.getMessageSerializer());
         
         final RestClient restClient = (RestClient)ClientFactory.getNamedClient(namedClient);
         restClient.getJerseyClient().addFilter(new LoggerFilter());
         
-        if(this.encoding == Encoding.gzip){
+        if(this.restAdapterConfig.getEncoding() == Encoding.gzip){
             restClient.getJerseyClient().addFilter(new GZIPContentEncodingFilter());
         }
         
-        InvocationHandler invocationHandler = new JerseyInvocationHandler(restClient, this.messageSerializer);
+        InvocationHandler invocationHandler = new JerseyInvocationHandler(restClient, this.restAdapterConfig);
         Object proxyInstance = Proxy.newProxyInstance(ClassLoader.getSystemClassLoader(),
             new Class<?>[]{clientClass}, invocationHandler);
         return (T)proxyInstance;
