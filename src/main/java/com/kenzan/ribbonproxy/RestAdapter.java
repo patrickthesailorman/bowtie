@@ -26,7 +26,7 @@ public class RestAdapter {
     }
 
     public static RestAdapter getNamedAdapter(String namedAdapter) {
-        return new RestAdapter(namedAdapter, null);
+        return new RestAdapter(namedAdapter, RestAdapterConfig.createDefault());
     }
 
     public static RestAdapter getNamedAdapter(String namedAdapter, RestAdapterConfig restAdapterConfig) {

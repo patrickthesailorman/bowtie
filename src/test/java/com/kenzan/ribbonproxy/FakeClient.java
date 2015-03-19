@@ -5,6 +5,7 @@ import java.util.Optional;
 import rx.Observable;
 
 import com.kenzan.ribbonproxy.annotation.Body;
+import com.kenzan.ribbonproxy.annotation.CacheKeyGroup;
 import com.kenzan.ribbonproxy.annotation.Cookie;
 import com.kenzan.ribbonproxy.annotation.Header;
 import com.kenzan.ribbonproxy.annotation.Http;
@@ -35,8 +36,20 @@ public interface FakeClient {
         )
     public FakeUser getUser(@Path("username") String name);
     
-    
-    
+
+    @Http(
+            method = Verb.GET,
+            uriTemplate = "/user/{username}",
+            headers = {
+                @Header(name="X-SESSION-ID", value="55892d6d-77df-4617-b728-6f5de97f5752")
+            }
+        )
+        @Hystrix(
+            groupKey=GROUP_KEY, commandKey=COMMAND_KEY
+            )
+        @CacheKeyGroup("userCache")
+        public FakeUser getCachedUser(@Path("username") String name);
+
     @Http(
         method = Verb.GET,
         uriTemplate = "/user/{username}",

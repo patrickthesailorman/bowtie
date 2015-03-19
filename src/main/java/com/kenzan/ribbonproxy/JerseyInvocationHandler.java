@@ -1,7 +1,7 @@
 package com.kenzan.ribbonproxy;
 
 import com.kenzan.ribbonproxy.annotation.Body;
-import com.kenzan.ribbonproxy.annotation.CacheKey;
+import com.kenzan.ribbonproxy.annotation.CacheKeyGroup;
 import com.kenzan.ribbonproxy.annotation.Cookie;
 import com.kenzan.ribbonproxy.annotation.Header;
 import com.kenzan.ribbonproxy.annotation.Http;
@@ -54,7 +54,7 @@ class JerseyInvocationHandler implements InvocationHandler{
             final HttpRequest request = methodInfo.toHttpRequest(args);
             final String cacheKey = methodInfo.getCacheKey(args);
 
-            final RestCache cache = restAdapterConfig.getRibbonCache();
+            final RestCache cache = restAdapterConfig.getRestCache();
             final RestCachingPolicy cachingPolicy = new RestCachingPolicy();
 
             if (cache != null) {
@@ -93,7 +93,7 @@ class JerseyInvocationHandler implements InvocationHandler{
         private final Http http;
         private final Hystrix hystrix;
         private final boolean isObservable;
-        private final String cacheKeyOverride;
+        private final String cacheKeyGroup;
         private List<String> cookies = new ArrayList<>();
 
         public MethodInfo(final Method method) {
@@ -112,9 +112,9 @@ class JerseyInvocationHandler implements InvocationHandler{
                             .findFirst()
                             .orElseThrow(() -> new IllegalStateException("No Hystrix annotation present."));
 
-            cacheKeyOverride = Arrays.stream(method.getAnnotations())
-                            .filter(a -> CacheKey.class.equals(a.annotationType()))
-                            .map(a -> a == null ? null : ((CacheKey)a).value())
+            cacheKeyGroup = Arrays.stream(method.getAnnotations())
+                            .filter(a -> CacheKeyGroup.class.equals(a.annotationType()))
+                            .map(a -> a == null ? null : ((CacheKeyGroup)a).value())
                             .findFirst()
                             .orElse(null);
 
@@ -201,8 +201,8 @@ class JerseyInvocationHandler implements InvocationHandler{
         
 
         private String getCacheKey(Object[] args) {
-            if (cacheKeyOverride != null) {
-                return cacheKeyOverride;
+            if (cacheKeyGroup != null) {
+                return cacheKeyGroup + ":" + this.getRenderedPath(args);
             }
 
             return this.getRenderedPath(args);

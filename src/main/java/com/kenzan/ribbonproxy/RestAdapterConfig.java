@@ -12,7 +12,7 @@ public class RestAdapterConfig {
 
     private MessageSerializer messageSerializer;
     private Encoding encoding;
-    private RestCache ribbonCache;
+    private RestCache restCache;
 
     private RestAdapterConfig() {
 
@@ -26,8 +26,8 @@ public class RestAdapterConfig {
         return this.encoding;
     }
 
-    public RestCache getRibbonCache() {
-        return this.ribbonCache;
+    public RestCache getRestCache() {
+        return this.restCache;
     }
 
     public static RestAdapterConfig createDefault(){
@@ -44,7 +44,7 @@ public class RestAdapterConfig {
 
         private MessageSerializer messageSerializer;
         private Encoding encoding;
-        private RestCache ribbonCache;
+        private RestCache restCache;
 
         private Builder() {
 
@@ -60,8 +60,8 @@ public class RestAdapterConfig {
             return this;
         }
 
-        public Builder withRibbonCache(RestCache ribbonCache) {
-            this.ribbonCache = ribbonCache;
+        public Builder withRestCache(RestCache restCache) {
+            this.restCache = restCache;
             return this;
         }
 
@@ -70,7 +70,7 @@ public class RestAdapterConfig {
 
             restAdapterConfig.messageSerializer = messageSerializer;
             restAdapterConfig.encoding = encoding;
-            restAdapterConfig.ribbonCache = ribbonCache;
+            restAdapterConfig.restCache = restCache;
 
             return restAdapterConfig;
         }

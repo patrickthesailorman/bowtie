@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kenzan.ribbonproxy.annotation.Encoding;
+import com.kenzan.ribbonproxy.cache.GuavaRestCache;
 import com.kenzan.ribbonproxy.model.FakeUser;
 import com.kenzan.ribbonproxy.model.FakeUserAddress;
 import com.kenzan.ribbonproxy.model.FakeUsers;
@@ -26,8 +27,11 @@ public class RestAdapterTest {
     
     private static FakeClient fakeClient;
     private static FakeClient fakeClient2;
+    private static FakeClient fakeClient3;
+    
     private static FakeUser user;
     
+    private static GuavaRestCache cache;
     @BeforeClass
     public static void beforeClass() throws IOException{
         
@@ -44,6 +48,15 @@ public class RestAdapterTest {
                         .build());
 
         fakeClient2 = restAdapter2.create(FakeClient.class);
+
+        cache = new GuavaRestCache();
+
+        final RestAdapter restAdapter3 = RestAdapter.getNamedAdapter("sample-client", RestAdapterConfig.custom()
+                .withMessageSerializer(new JacksonMessageSerializer())
+                .withRestCache(cache)
+                .build());
+
+        fakeClient3 = restAdapter3.create(FakeClient.class);
 
         user = new FakeUser();
         user.setName("John Doe");
@@ -121,5 +134,13 @@ public class RestAdapterTest {
         LOGGER.info("Starting testMutateUser");
         HttpResponse response = fakeClient.mutateUser(user,"aa8a2e85-412e-46a2-889f-b2c133a59c89");
         Assert.assertThat(response.getStatus(), IsEqual.equalTo(200));
+    }
+
+    @Test
+    public void testGetCachedUser() {
+        LOGGER.info("Starting testGetCachedUser");
+        FakeUser user = fakeClient3.getCachedUser("jdoe");
+        Assert.assertThat(user.getName(), IsEqual.equalTo("John Doe"));
+        Assert.assertThat(cache.get("userCache:/user/jdoe").map(a -> ((FakeUser)a).getName()).orElse(null), IsEqual.equalTo("John Doe"));
     }
 }
