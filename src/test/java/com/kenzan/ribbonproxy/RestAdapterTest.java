@@ -1,14 +1,18 @@
 package com.kenzan.ribbonproxy;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Optional;
 
+
+import org.codehaus.jackson.map.ObjectMapper;
 import org.hamcrest.core.IsEqual;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 import com.kenzan.ribbonproxy.annotation.Encoding;
 import com.kenzan.ribbonproxy.cache.GuavaRestCache;
@@ -141,6 +145,19 @@ public class RestAdapterTest {
         LOGGER.info("Starting testGetCachedUser");
         FakeUser user = fakeClient3.getCachedUser("jdoe");
         Assert.assertThat(user.getName(), IsEqual.equalTo("John Doe"));
-        Assert.assertThat(cache.get("userCache:/user/jdoe").map(a -> ((FakeUser)a).getName()).orElse(null), IsEqual.equalTo("John Doe"));
+        Assert.assertThat(
+            cache.get("userCache:/user/jdoe")
+            .map(t -> {
+                try {
+                    return new ObjectMapper().readValue(t, FakeUser.class).getName();
+                } catch (Exception e) {
+                    throw new IllegalStateException(e);
+                }
+            }).get(),
+            IsEqual.equalTo("John Doe"));
+        
+        
+        user = fakeClient3.getCachedUser("jdoe");
+        Assert.assertThat(user.getName(), IsEqual.equalTo("John Doe"));
     }
 }

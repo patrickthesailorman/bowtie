@@ -1,5 +1,6 @@
 package com.kenzan.ribbonproxy;
 
+import com.google.common.io.ByteStreams;
 import com.kenzan.ribbonproxy.annotation.Body;
 import com.kenzan.ribbonproxy.annotation.CacheKeyGroup;
 import com.kenzan.ribbonproxy.annotation.Cookie;
@@ -19,6 +20,8 @@ import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.niws.client.http.RestClient;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -32,6 +35,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.core.UriBuilder;
+
+import org.apache.commons.io.IOUtils;
 
 import rx.Observable;
 
@@ -54,15 +59,16 @@ class JerseyInvocationHandler implements InvocationHandler{
             final HttpRequest request = methodInfo.toHttpRequest(args);
             final String cacheKey = methodInfo.getCacheKey(args);
 
-            final RestCache cache = restAdapterConfig.getRestCache();
+            final Optional<RestCache> cache = Optional.ofNullable(restAdapterConfig.getRestCache());
             final RestCachingPolicy cachingPolicy = new RestCachingPolicy();
+            
+            if (cache.isPresent() && cachingPolicy.isCachable(request)) {
 
-            if (cache != null) {
-
-                final Optional<Object> cachedObject = cache.get(cacheKey);
+                final Optional<byte[]> cachedObject = cache.get().get(cacheKey);
 
                 if (cachedObject.isPresent()) {
-                    return cachedObject.get();
+                    return restAdapterConfig.getMessageSerializer().readValue(methodInfo.responseClass, new ByteArrayInputStream(
+                        cachedObject.get()));
                 }
             }
 
@@ -71,14 +77,25 @@ class JerseyInvocationHandler implements InvocationHandler{
             final Object object;
             if (HttpResponse.class.equals(methodInfo.responseClass)) {
                 object = httpResponse;
+                
             } else {
-                object = restAdapterConfig.getMessageSerializer().readValue(methodInfo.responseClass, httpResponse.getInputStream());
+                
+                //XXX:  Need to determine how to handle errors
+                Optional<byte[]> cachedBytes = Optional.empty();
+                final InputStream inputStream;
+                if(cache.isPresent() && cachingPolicy.isCachable(httpResponse)){
+                    cachedBytes = Optional.ofNullable(ByteStreams.toByteArray(httpResponse.getInputStream()));
+                    
+                    cache.get().set(cacheKey, cachedBytes.get());
+                    
+                    inputStream = new ByteArrayInputStream(cachedBytes.get());
+                }else{
+                    inputStream = httpResponse.getInputStream();
+                }
+                
+                object = restAdapterConfig.getMessageSerializer().readValue(methodInfo.responseClass, inputStream);
             }
-
-            if (cache != null && cachingPolicy.isCachable(httpResponse)) {
-                cache.set(cacheKey, object);
-            }
-
+            
             return object;
         }
         

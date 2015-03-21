@@ -7,7 +7,7 @@ import java.util.Optional;
 
 public interface RestCache {
 
-    public Optional<Object> get(String key);
+    public Optional<byte[]> get(String key);
 
-    public void set(String key, Object value);
+    public void set(String key, byte[] value);
 }
