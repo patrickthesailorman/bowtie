@@ -3,20 +3,21 @@
  */
 package com.kenzan.bowtie.cache;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GuavaRestCache  implements RestCache{
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.netflix.niws.client.http.CachedResponse;
 
+public class GuavaRestCache  implements RestCache{
+    
     final static private Logger LOGGER = LoggerFactory.getLogger(GuavaRestCache.class);
     
-    final Cache<String, byte[]> cache;
+    final Cache<String, CachedResponse> cache;
 
     public GuavaRestCache() {
         this.cache = CacheBuilder.newBuilder()
@@ -25,17 +26,14 @@ public class GuavaRestCache  implements RestCache{
     }
 
     @Override
-    public Optional<byte[]> get(String key) {
-        
-        Optional<byte[]> bytes = Optional.ofNullable(cache.getIfPresent(key));
-        LOGGER.info("Found in cache: " + key + " " + bytes.isPresent());
-        return bytes;
+    public Optional<CachedResponse> get(String key) {
+        LOGGER.debug("Getting cache: " + key);
+        return Optional.ofNullable(this.cache.getIfPresent(key));
     }
 
     @Override
-    public void set(String key, byte[] value) {
-        
-        LOGGER.info("Setting cache: " + key);
+    public void set(String key, CachedResponse value) {
+        LOGGER.debug("Setting cache: " + key);
         cache.put(key, value);
     }
 }

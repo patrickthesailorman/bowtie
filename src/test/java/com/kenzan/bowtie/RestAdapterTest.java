@@ -1,9 +1,11 @@
 package com.kenzan.bowtie;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Optional;
 
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.hamcrest.core.IsEqual;
 import org.junit.Assert;
@@ -12,14 +14,13 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.kenzan.bowtie.RestAdapter;
-import com.kenzan.bowtie.RestAdapterConfig;
 import com.kenzan.bowtie.annotation.Encoding;
 import com.kenzan.bowtie.cache.GuavaRestCache;
 import com.kenzan.bowtie.model.FakeUser;
 import com.kenzan.bowtie.model.FakeUserAddress;
 import com.kenzan.bowtie.model.FakeUsers;
 import com.kenzan.bowtie.serializer.JacksonMessageSerializer;
+import com.netflix.client.ClientException;
 import com.netflix.client.http.HttpResponse;
 import com.netflix.config.ConfigurationManager;
 
@@ -141,7 +142,7 @@ public class RestAdapterTest {
     }
 
     @Test
-    public void testGetCachedUser() {
+    public void testGetCachedUser() throws JsonParseException, JsonMappingException, IOException, ClientException {
         LOGGER.info("Starting testGetCachedUser");
         FakeUser user = fakeClient3.getCachedUser("jdoe");
         Assert.assertThat(user.getName(), IsEqual.equalTo("John Doe"));
@@ -149,7 +150,8 @@ public class RestAdapterTest {
             cache.get("userCache:/user/jdoe")
             .map(t -> {
                 try {
-                    return new ObjectMapper().readValue(t, FakeUser.class).getName();
+                    return new ObjectMapper().readValue(new ByteArrayInputStream(t.getCachedBytes()),
+                        FakeUser.class).getName();
                 } catch (Exception e) {
                     throw new IllegalStateException(e);
                 }
@@ -158,6 +160,13 @@ public class RestAdapterTest {
         
         
         user = fakeClient3.getCachedUser("jdoe");
+        Assert.assertThat(user.getName(), IsEqual.equalTo("John Doe"));
+        
+        
+        HttpResponse response = fakeClient3.getCachedUserResponse("jdoe");
+        Assert.assertThat(response.getStatus(), IsEqual.equalTo(200));
+        
+        user = new ObjectMapper().readValue(response.getInputStream(), FakeUser.class);
         Assert.assertThat(user.getName(), IsEqual.equalTo("John Doe"));
     }
 }

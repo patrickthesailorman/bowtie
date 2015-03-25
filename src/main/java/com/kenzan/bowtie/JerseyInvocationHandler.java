@@ -1,5 +1,23 @@
 package com.kenzan.bowtie;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
+import javax.ws.rs.core.UriBuilder;
+
+import rx.Observable;
+
 import com.google.common.io.ByteStreams;
 import com.kenzan.bowtie.annotation.Body;
 import com.kenzan.bowtie.annotation.CacheKeyGroup;
@@ -18,27 +36,8 @@ import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommand.Setter;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
+import com.netflix.niws.client.http.CachedResponse;
 import com.netflix.niws.client.http.RestClient;
-
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-
-import javax.ws.rs.core.UriBuilder;
-
-import org.apache.commons.io.IOUtils;
-
-import rx.Observable;
 
 class JerseyInvocationHandler implements InvocationHandler{
     
@@ -64,11 +63,17 @@ class JerseyInvocationHandler implements InvocationHandler{
             
             if (cache.isPresent() && cachingPolicy.isCachable(request)) {
 
-                final Optional<byte[]> cachedObject = cache.get().get(cacheKey);
+                final Optional<CachedResponse> cachedResponse = cache.get().get(cacheKey);
 
-                if (cachedObject.isPresent()) {
-                    return restAdapterConfig.getMessageSerializer().readValue(methodInfo.responseClass, new ByteArrayInputStream(
-                        cachedObject.get()));
+                if (cachedResponse.isPresent()) {
+                    //XXX Check to see if need to convert to a HttpResponse
+                    if(HttpResponse.class.equals(methodInfo.responseClass)){
+                        return cachedResponse.get().toHttpResponse(
+                            restClient.getJerseyClient().getMessageBodyWorkers());
+                    }else{
+                        return restAdapterConfig.getMessageSerializer().readValue(methodInfo.responseClass,
+                            new ByteArrayInputStream(cachedResponse.get().getCachedBytes()));
+                    }
                 }
             }
 
@@ -81,14 +86,18 @@ class JerseyInvocationHandler implements InvocationHandler{
             } else {
                 
                 //XXX:  Need to determine how to handle errors
-                Optional<byte[]> cachedBytes = Optional.empty();
+                final byte[] cachedBytes;
                 final InputStream inputStream;
                 if(cache.isPresent() && cachingPolicy.isCachable(httpResponse)){
-                    cachedBytes = Optional.ofNullable(ByteStreams.toByteArray(httpResponse.getInputStream()));
+                    cachedBytes = ByteStreams.toByteArray(httpResponse.getInputStream());
                     
-                    cache.get().set(cacheKey, cachedBytes.get());
                     
-                    inputStream = new ByteArrayInputStream(cachedBytes.get());
+                    cache.get().set(cacheKey, CachedResponse.createResponse(
+                        httpResponse.getStatus(),
+                        httpResponse.getHeaders(),
+                        cachedBytes));
+                    
+                    inputStream = new ByteArrayInputStream(cachedBytes);
                 }else{
                     inputStream = httpResponse.getInputStream();
                 }

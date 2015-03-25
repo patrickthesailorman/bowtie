@@ -98,7 +98,7 @@
 					<proxyPort>1090</proxyPort>
 					<logLevel>DEBUG</logLevel>
 					 <pipeLogToConsole>true</pipeLogToConsole>
-					<initializationClass>com.kenzan.ribbonproxy.MockServerInitializationClass</initializationClass>
+					<initializationClass>com.kenzan.bowtie.MockServerInitializationClass</initializationClass>
 				</configuration>
 				<executions>
 					<execution>

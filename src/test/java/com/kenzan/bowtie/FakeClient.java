@@ -38,17 +38,32 @@ public interface FakeClient {
     
 
     @Http(
-            method = Verb.GET,
-            uriTemplate = "/user/{username}",
-            headers = {
-                @Header(name="X-SESSION-ID", value="55892d6d-77df-4617-b728-6f5de97f5752")
-            }
+        method = Verb.GET,
+        uriTemplate = "/user/{username}",
+        headers = {
+            @Header(name="X-SESSION-ID", value="55892d6d-77df-4617-b728-6f5de97f5752")
+        }
+    )
+    @Hystrix(
+        groupKey=GROUP_KEY, commandKey=COMMAND_KEY
         )
-        @Hystrix(
-            groupKey=GROUP_KEY, commandKey=COMMAND_KEY
-            )
-        @CacheKeyGroup("userCache")
-        public FakeUser getCachedUser(@Path("username") String name);
+    @CacheKeyGroup("userCache")
+    public FakeUser getCachedUser(@Path("username") String name);
+    
+    
+    @Http(
+        method = Verb.GET,
+        uriTemplate = "/user/{username}",
+        headers = {
+            @Header(name="X-SESSION-ID", value="55892d6d-77df-4617-b728-6f5de97f5752")
+        }
+    )
+    @Hystrix(
+        groupKey=GROUP_KEY, commandKey=COMMAND_KEY
+        )
+    @CacheKeyGroup("userCache")
+    public HttpResponse getCachedUserResponse(@Path("username") String name);
+    
 
     @Http(
         method = Verb.GET,
