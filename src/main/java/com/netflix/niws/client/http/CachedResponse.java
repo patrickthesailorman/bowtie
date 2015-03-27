@@ -1,6 +1,7 @@
 package com.netflix.niws.client.http;
 
 import java.io.ByteArrayInputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -10,7 +11,11 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.core.header.InBoundHeaders;
 import com.sun.jersey.spi.MessageBodyWorkers;
 
-public class CachedResponse{
+
+public class CachedResponse implements Serializable{
+
+    private static final long serialVersionUID = -6367516151816285192L;
+
 
     public static CachedResponse createResponse(int status,
                                                   Map<String, Collection<String>> headers,

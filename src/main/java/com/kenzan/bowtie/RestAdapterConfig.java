@@ -1,6 +1,3 @@
-/*
- * Copyright 2014, Charter Communications, All rights reserved.
- */
 package com.kenzan.bowtie;
 
 import com.kenzan.bowtie.annotation.Encoding;

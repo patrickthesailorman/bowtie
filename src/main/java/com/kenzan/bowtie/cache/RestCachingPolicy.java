@@ -1,6 +1,3 @@
-/*
- * Copyright 2014, Charter Communications, All rights reserved.
- */
 package com.kenzan.bowtie.cache;
 
 import java.util.Arrays;
@@ -14,7 +11,8 @@ import com.netflix.client.http.HttpResponse;
 //XXX:  Unit test heavily
 public class RestCachingPolicy {
     
-    private final List<Integer> CACHEABLE_STATUSES = Arrays.asList(200, // OK
+    private final List<Integer> CACHEABLE_STATUSES = Arrays.asList(
+        200, // OK
         203, // Non-Authoritative Information
         300, // Multiple Choices
         301, // Moved Permanently

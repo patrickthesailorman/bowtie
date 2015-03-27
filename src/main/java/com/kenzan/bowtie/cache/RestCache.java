@@ -1,6 +1,3 @@
-/*
- * Copyright 2014, Charter Communications, All rights reserved.
- */
 package com.kenzan.bowtie.cache;
 
 import java.util.Optional;

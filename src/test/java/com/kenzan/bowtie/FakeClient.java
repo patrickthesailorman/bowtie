@@ -81,7 +81,10 @@ public interface FakeClient {
     
     @Http(
         method = Verb.GET,
-        uriTemplate = "/user/{field}/{username}"
+        uriTemplate = "/user/{field}/{username}",
+        headers = {
+            @Header(name="Cache-Control", value="no-cache")
+        }
     )
     @Hystrix(
         groupKey=GROUP_KEY, commandKey=COMMAND_KEY
