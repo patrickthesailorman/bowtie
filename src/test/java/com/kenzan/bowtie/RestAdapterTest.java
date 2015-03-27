@@ -144,10 +144,10 @@ public class RestAdapterTest {
     @Test
     public void testGetCachedUser() throws JsonParseException, JsonMappingException, IOException, ClientException {
         LOGGER.info("Starting testGetCachedUser");
-        FakeUser user = fakeClient3.getCachedUser("jdoe");
-        Assert.assertThat(user.getName(), IsEqual.equalTo("John Doe"));
+        FakeUser user = fakeClient3.getCachedUser("bdoe");
+        Assert.assertThat(user.getName(), IsEqual.equalTo("Bob Doe"));
         Assert.assertThat(
-            cache.get("userCache:/user/jdoe")
+            cache.get("userCache:/user/bdoe")
             .map(t -> {
                 try {
                     return new ObjectMapper().readValue(new ByteArrayInputStream(t.getCachedBytes()),
@@ -156,17 +156,17 @@ public class RestAdapterTest {
                     throw new IllegalStateException(e);
                 }
             }).get(),
-            IsEqual.equalTo("John Doe"));
+            IsEqual.equalTo("Bob Doe"));
         
         
-        user = fakeClient3.getCachedUser("jdoe");
-        Assert.assertThat(user.getName(), IsEqual.equalTo("John Doe"));
+        user = fakeClient3.getCachedUser("bdoe");
+        Assert.assertThat(user.getName(), IsEqual.equalTo("Bob Doe"));
         
         
-        HttpResponse response = fakeClient3.getCachedUserResponse("jdoe");
+        HttpResponse response = fakeClient3.getCachedUserResponse("bdoe");
         Assert.assertThat(response.getStatus(), IsEqual.equalTo(200));
         
         user = new ObjectMapper().readValue(response.getInputStream(), FakeUser.class);
-        Assert.assertThat(user.getName(), IsEqual.equalTo("John Doe"));
+        Assert.assertThat(user.getName(), IsEqual.equalTo("Bob Doe"));
     }
 }

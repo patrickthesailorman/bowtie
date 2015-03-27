@@ -30,6 +30,8 @@ public class MockServerInitializationClass implements ExpectationInitializer {
         
         getRoleUsers(mockServerClient);
         
+        getCachedUser(mockServerClient);
+        
     }
 
     private void emailUser(MockServerClient mockServerClient) {
@@ -65,7 +67,6 @@ public class MockServerInitializationClass implements ExpectationInitializer {
         ).respond(
             HttpResponse.response()
             .withStatusCode(200)
-            .withHeader(Header.header("cache-control","no-transform,public,max-age=300,s-maxage=900"))
             .withBody("{ \"users\" : [{ \"name\" : \"John Doe\" }] }")
         );
     }
@@ -88,6 +89,26 @@ public class MockServerInitializationClass implements ExpectationInitializer {
     }
     
     
+    private void getCachedUser(MockServerClient mockServerClient) {
+
+        mockServerClient
+        .dumpToLog()
+        .when(
+            HttpRequest.request()
+            .withMethod("GET")
+            .withHeader(Header.header("X-SESSION-ID", "55892d6d-77df-4617-b728-6f5de97f5752"))
+            .withPath("/user/bdoe"),
+            Times.unlimited()
+        ).respond(
+            HttpResponse.response()
+            .withStatusCode(200)
+            .withHeader(Header.header("Cache-Control","no-transform,public,max-age=300,s-maxage=900"))
+            .withBody("{ \"name\" : \"Bob Doe\" }")
+        );
+    }
+    
+    
+    
     private void getUserAddress(MockServerClient mockServerClient) {
 
         mockServerClient
@@ -95,6 +116,7 @@ public class MockServerInitializationClass implements ExpectationInitializer {
         .when(
             HttpRequest.request()
             .withMethod("GET")
+            .withHeader(Header.header("Cache-Control", "no-cache"))
             .withPath("/user/address/jdoe"),
             Times.unlimited()
         ).respond(

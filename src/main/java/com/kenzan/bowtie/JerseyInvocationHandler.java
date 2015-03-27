@@ -61,8 +61,8 @@ class JerseyInvocationHandler implements InvocationHandler{
             final Optional<RestCache> cache = Optional.ofNullable(restAdapterConfig.getRestCache());
             final RestCachingPolicy cachingPolicy = new RestCachingPolicy();
             
-            final boolean isRequestCacheable = cachingPolicy.isCachable(request);
-            if (cache.isPresent() && isRequestCacheable) {
+            final boolean isRequestCacheable = cache.isPresent() && cachingPolicy.isCachable(request);
+            if (isRequestCacheable) {
 
                 final Optional<CachedResponse> cachedResponse = cache.get().get(cacheKey);
 
@@ -89,7 +89,9 @@ class JerseyInvocationHandler implements InvocationHandler{
                 //XXX:  Need to determine how to handle errors
                 final byte[] cachedBytes;
                 final InputStream inputStream;
-                if(cache.isPresent() && isRequestCacheable && cachingPolicy.isCachable(httpResponse)){
+
+                if(isRequestCacheable && cachingPolicy.isCachable(httpResponse)){
+                    
                     cachedBytes = ByteStreams.toByteArray(httpResponse.getInputStream());
                     
                     
