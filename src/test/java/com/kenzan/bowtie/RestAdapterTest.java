@@ -54,7 +54,7 @@ public class RestAdapterTest {
 
         fakeClient2 = restAdapter2.create(FakeClient.class);
 
-        cache = new GuavaRestCache();
+        cache = GuavaRestCache.newDefaultCache();
 
         final RestAdapter restAdapter3 = RestAdapter.getNamedAdapter("sample-client", RestAdapterConfig.custom()
                 .withMessageSerializer(new JacksonMessageSerializer())

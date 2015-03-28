@@ -16,10 +16,15 @@ public class GuavaRestCache  implements RestCache{
     
     final Cache<String, CachedResponse> cache;
 
-    public GuavaRestCache() {
-        this.cache = CacheBuilder.newBuilder()
-                .expireAfterWrite(10, TimeUnit.MINUTES)
-                .build();
+    
+    public static GuavaRestCache newDefaultCache() {
+        return new GuavaRestCache(CacheBuilder.newBuilder()
+            .expireAfterWrite(10, TimeUnit.MINUTES)
+            .build());
+    }
+    
+    public GuavaRestCache(Cache<String, CachedResponse> cache) {
+        this.cache = cache;
     }
 
     @Override
