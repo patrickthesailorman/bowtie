@@ -24,10 +24,15 @@ public class CachedResponse implements Serializable{
         return new CachedResponse(status, headers, cachedBytes);
     }
     
-    final private Map<String, Collection<String>> headers;
-    final private int status;
-    final private byte[] cachedBytes;
+    private Map<String, Collection<String>> headers;
+    private int status;
+    private byte[] cachedBytes;
 
+    
+    public CachedResponse() {
+
+    }
+    
     
     public CachedResponse(int status, Map<String, Collection<String>> headers,
         byte[] cachedBytes) {
@@ -38,6 +43,29 @@ public class CachedResponse implements Serializable{
         
     }
     
+    public byte[] getCachedBytes() {
+        return cachedBytes;
+    }
+
+    public Map<String, Collection<String>> getHeaders() {
+        return headers;
+    }
+    
+    public int getStatus() {
+        return status;
+    }
+
+    
+    public void setCachedBytes(byte[] cachedBytes) {
+    
+        this.cachedBytes = cachedBytes;
+    }
+
+    public void setStatus(int status) {
+    
+        this.status = status;
+    }
+
     public HttpResponse toHttpResponse(MessageBodyWorkers workers){
         
         final InBoundHeaders inBoundHeaders = new InBoundHeaders();
@@ -46,18 +74,5 @@ public class CachedResponse implements Serializable{
         });
         
         return new HttpClientResponse(new ClientResponse(status, inBoundHeaders, new ByteArrayInputStream(cachedBytes), workers));
-    }
-
-    
-    public byte[] getCachedBytes() {
-        return cachedBytes;
-    }
-
-    public Map<String, Collection<String>> getHeaders() {
-        return headers;
-    }
-
-    public int getStatus() {
-        return status;
     }
 }

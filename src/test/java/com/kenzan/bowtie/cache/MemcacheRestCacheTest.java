@@ -40,6 +40,7 @@ public class MemcacheRestCacheTest {
     
     @Before
     public void setup() throws InterruptedException{
+        
         // create daemon and start it
         final CacheStorage<Key, LocalCacheElement> storage = ConcurrentLinkedHashMap.create(ConcurrentLinkedHashMap.EvictionPolicy.FIFO,
             10000, 10000);

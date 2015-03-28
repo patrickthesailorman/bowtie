@@ -3,8 +3,6 @@ package com.kenzan.bowtie.cache;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.Optional;
 
 import net.spy.memcached.CachedData;
@@ -12,6 +10,10 @@ import net.spy.memcached.CachedData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+import com.esotericsoftware.minlog.Log;
 import com.netflix.evcache.EVCache;
 import com.netflix.evcache.EVCacheException;
 import com.netflix.evcache.EVCacheTranscoder;
@@ -34,7 +36,14 @@ public class MemcacheRestCache  implements RestCache{
     private static class CachedDataResponseEVCacheTranscoder implements EVCacheTranscoder<CachedResponse>{
         
         private static final int CACHED_DATA_OBJECT_FLAG = 800;
+        private Kryo kryo;
 
+        public CachedDataResponseEVCacheTranscoder() {
+            kryo = new Kryo();
+            kryo.register(CachedResponse.class);
+        }
+        
+        
         @Override
         public boolean asyncDecode(CachedData d) {
             return false;
@@ -44,10 +53,12 @@ public class MemcacheRestCache  implements RestCache{
         public CachedData encode(CachedResponse o) {
             
             try (final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                 final ObjectOutputStream objectOutputStream = new ObjectOutputStream(baos);){
-                objectOutputStream.writeObject(o);
+                 final Output output = new Output(baos);){
+                 kryo.writeObject(output, o);
+                 
+                 
                 
-                return new CachedData(CACHED_DATA_OBJECT_FLAG, baos.toByteArray(), getMaxSize());
+                 return new CachedData(CACHED_DATA_OBJECT_FLAG, output.getBuffer(), getMaxSize());
             } catch (IOException e) {
                 throw new MemcacheRestCacheException("Could not encode " + o.getClass().getName(), e);
             }
@@ -56,12 +67,12 @@ public class MemcacheRestCache  implements RestCache{
         @Override
         public CachedResponse decode(CachedData d) {
             
+            Log.info("bytes: " + d.getData().length);
             try (final ByteArrayInputStream bais = new ByteArrayInputStream(d.getData());
-                 final ObjectInputStream objectInputStream = new ObjectInputStream(bais)){
+                 final Input input = new Input(bais)){
                 
-                return (CachedResponse) objectInputStream.readObject();
-            } catch (IOException | ClassNotFoundException e) {
-                
+                return kryo.readObject(input, CachedResponse.class);
+            } catch (IOException e) {
                 throw new MemcacheRestCacheException("Could not decode " + CachedResponse.class.getName(), e);
             }
         }
