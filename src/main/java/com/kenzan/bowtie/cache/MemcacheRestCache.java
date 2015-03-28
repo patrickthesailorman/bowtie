@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-import com.esotericsoftware.minlog.Log;
 import com.netflix.evcache.EVCache;
 import com.netflix.evcache.EVCacheException;
 import com.netflix.evcache.EVCacheTranscoder;
@@ -55,8 +54,6 @@ public class MemcacheRestCache  implements RestCache{
             try (final ByteArrayOutputStream baos = new ByteArrayOutputStream();
                  final Output output = new Output(baos);){
                  kryo.writeObject(output, o);
-                 
-                 
                 
                  return new CachedData(CACHED_DATA_OBJECT_FLAG, output.getBuffer(), getMaxSize());
             } catch (IOException e) {
@@ -67,7 +64,6 @@ public class MemcacheRestCache  implements RestCache{
         @Override
         public CachedResponse decode(CachedData d) {
             
-            Log.info("bytes: " + d.getData().length);
             try (final ByteArrayInputStream bais = new ByteArrayInputStream(d.getData());
                  final Input input = new Input(bais)){
                 
@@ -97,7 +93,7 @@ public class MemcacheRestCache  implements RestCache{
 
     @Override
     public Optional<CachedResponse> get(String key) {
-        LOGGER.debug("Getting key from cache: " + key);
+        LOGGER.debug("Getting key from cache: {}", key);
 
         try {
             return Optional.ofNullable(evCache.get(key, TRANSCODER));

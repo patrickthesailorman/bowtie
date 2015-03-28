@@ -29,13 +29,13 @@ public class GuavaRestCache  implements RestCache{
 
     @Override
     public Optional<CachedResponse> get(String key) {
-        LOGGER.debug("Getting cache: " + key);
+        LOGGER.debug("Getting cache: {}", key);
         return Optional.ofNullable(this.cache.getIfPresent(key));
     }
 
     @Override
     public void set(String key, CachedResponse value) {
-        LOGGER.debug("Setting cache: " + key);
+        LOGGER.debug("Setting cache: {}", key);
         cache.put(key, value);
     }
 }
