@@ -11,8 +11,12 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import com.google.common.collect.Lists;
+import com.netflix.evcache.EVCache;
+import com.netflix.evcache.EVCacheException;
+import com.netflix.evcache.pool.EVCacheClientPoolManager;
 import com.netflix.niws.client.http.CachedResponse;
 import com.thimbleware.jmemcached.CacheImpl;
 import com.thimbleware.jmemcached.Key;
@@ -50,7 +54,15 @@ public class MemcacheRestCacheTest {
     @Test
     public void testSetAndGet() {
         
-        final MemcacheRestCache memcacheRestCache = new MemcacheRestCache();
+        EVCacheClientPoolManager.getInstance().initEVCache("SAMPLECACHE");
+        
+        EVCache evCache = (new EVCache.Builder())
+                        .setAppName("SAMPLECACHE")
+                        .setCacheName("cid")
+                        .enableZoneFallback()
+                        .build();
+        
+        final MemcacheRestCache memcacheRestCache = new MemcacheRestCache(evCache);
         final Map<String, Collection<String>> headers = newHeaders();
         memcacheRestCache.set(FOO, new CachedResponse(HttpStatus.SC_OK, headers, FOO.getBytes()));
         
@@ -60,6 +72,48 @@ public class MemcacheRestCacheTest {
         Assert.assertThat(cachedResponse.getCachedBytes(), IsEqual.equalTo(FOO.getBytes()));
         Assert.assertThat(cachedResponse.getHeaders(), IsEqual.equalTo(headers));
     }
+    
+    @Test
+    public void testSetException() throws EVCacheException {
+        
+        CachedResponse cachedResponse = new CachedResponse(HttpStatus.SC_OK, null, null);
+        
+        final EVCache evcache = Mockito.mock(EVCache.class);
+        
+        Mockito.doThrow(new EVCacheException("Set me an exception!"))
+            .when(evcache) 
+            .set(FOO, cachedResponse, MemcacheRestCache.TRANSCODER);
+
+        final MemcacheRestCache memcacheRestCache = new MemcacheRestCache(evcache);
+        
+        try {
+            memcacheRestCache.set(FOO, cachedResponse);
+        } catch (Exception e) {
+            Assert.assertThat(e.getClass(), IsEqual.equalTo(MemcacheRestCache.MemcacheRestCacheException.class));
+            Assert.assertThat(e.getMessage(), IsEqual.equalTo("Could set key foo"));
+        }
+    }
+    
+     
+    @Test
+    public void testGetException() throws EVCacheException {
+        
+        final EVCache evcache = Mockito.mock(EVCache.class);
+        
+        Mockito.doThrow(new EVCacheException("Get me an exception!"))
+            .when(evcache)
+            .get(FOO, MemcacheRestCache.TRANSCODER);
+
+        final MemcacheRestCache memcacheRestCache = new MemcacheRestCache(evcache);
+        
+        try {
+            memcacheRestCache.get(FOO);
+        } catch (Exception e) {
+            Assert.assertThat(e.getClass(), IsEqual.equalTo(MemcacheRestCache.MemcacheRestCacheException.class));
+            Assert.assertThat(e.getMessage(), IsEqual.equalTo("Could get key foo"));
+        }
+    }
+    
     
     @After
     public void teardown(){

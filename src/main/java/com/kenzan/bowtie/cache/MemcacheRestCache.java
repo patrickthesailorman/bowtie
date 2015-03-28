@@ -15,10 +15,21 @@ import org.slf4j.LoggerFactory;
 import com.netflix.evcache.EVCache;
 import com.netflix.evcache.EVCacheException;
 import com.netflix.evcache.EVCacheTranscoder;
-import com.netflix.evcache.pool.EVCacheClientPoolManager;
 import com.netflix.niws.client.http.CachedResponse;
 
 public class MemcacheRestCache  implements RestCache{
+    
+    protected static class MemcacheRestCacheException extends RuntimeException{
+
+        public MemcacheRestCacheException(String message, Throwable throwable) {
+            super(message, throwable);
+            
+            LOGGER.error(message, throwable);
+        }
+
+        private static final long serialVersionUID = -7775657351842400056L;
+        
+    }
     
     private static class CachedDataResponseEVCacheTranscoder implements EVCacheTranscoder<CachedResponse>{
         
@@ -38,10 +49,8 @@ public class MemcacheRestCache  implements RestCache{
                 
                 return new CachedData(CACHED_DATA_OBJECT_FLAG, baos.toByteArray(), getMaxSize());
             } catch (IOException e) {
-                e.printStackTrace();  //XXX better
+                throw new MemcacheRestCacheException("Could not encode " + o.getClass().getName(), e);
             }
-            
-            return null;  //XXX better
         }
 
         @Override
@@ -52,10 +61,9 @@ public class MemcacheRestCache  implements RestCache{
                 
                 return (CachedResponse) objectInputStream.readObject();
             } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();  //XXX better
+                
+                throw new MemcacheRestCacheException("Could not decode " + CachedResponse.class.getName(), e);
             }
-            
-            return null;  //XXX better
         }
 
         @Override
@@ -65,44 +73,35 @@ public class MemcacheRestCache  implements RestCache{
     }
     
     
-    final static private CachedDataResponseEVCacheTranscoder TRANSCODER = new CachedDataResponseEVCacheTranscoder();
+    final static protected CachedDataResponseEVCacheTranscoder TRANSCODER = new CachedDataResponseEVCacheTranscoder();
     
     final static private Logger LOGGER = LoggerFactory.getLogger(MemcacheRestCache.class);
     
     private final EVCache evCache;
     
     
-    public MemcacheRestCache() {
-        EVCacheClientPoolManager.getInstance().initEVCache("SAMPLECACHE");
-        
-        evCache = (new EVCache.Builder())
-                        .setAppName("SAMPLECACHE")
-                        .setCacheName("cid")
-                        .enableZoneFallback()
-                        .build();
-
+    public MemcacheRestCache(EVCache evCache) {
+        this.evCache = evCache;
     }
 
     @Override
     public Optional<CachedResponse> get(String key) {
-        LOGGER.debug("Getting cache: " + key);
+        LOGGER.debug("Getting key from cache: " + key);
 
         try {
             return Optional.ofNullable(evCache.get(key, TRANSCODER));
         } catch (EVCacheException e) {
-            e.printStackTrace(); //XXX Handle better
+            throw new MemcacheRestCacheException("Could get key " + key, e);
         }   
-        
-        return Optional.empty();
     }
 
     @Override
     public void set(String key, CachedResponse value) {
         LOGGER.debug("Setting cache: {}",  key);
         try {
-            evCache.set(key, value);
+            evCache.set(key, value, TRANSCODER);
         } catch (EVCacheException e) {
-            e.printStackTrace();  //XXX Handle better
+            throw new MemcacheRestCacheException("Could set key " + key, e);
         }
     }
 }

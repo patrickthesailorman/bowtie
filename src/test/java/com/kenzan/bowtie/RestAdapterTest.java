@@ -43,7 +43,7 @@ public class RestAdapterTest {
         LOGGER.info("Starting beforeClass");
         ConfigurationManager.loadPropertiesFromResources("sample-client.properties");
         
-        final RestAdapter restAdapter = RestAdapter.getNamedAdapter("sample-client", RestAdapterConfig.createDefault());
+        final RestAdapter restAdapter = RestAdapter.getNamedAdapter("sample-client");
         fakeClient = restAdapter.create(FakeClient.class);
 
 
