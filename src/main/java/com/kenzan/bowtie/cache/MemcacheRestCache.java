@@ -104,9 +104,13 @@ public class MemcacheRestCache  implements RestCache{
 
     @Override
     public void set(String key, CachedResponse value) {
-        LOGGER.debug("Setting cache: {}",  key);
+        //XXX The TTL is interpreted as millis from epoc if ttl > 30d.  Need to acccount for this in the TTL
+        LOGGER.debug("Setting cache: {} for {}",  key, value.getTTL());
         try {
-            evCache.set(key, value, TRANSCODER);
+            long ttl = value.getTTL();
+            if(ttl > 0){
+                evCache.set(key, value, TRANSCODER, (int)value.getTTL());
+            }
         } catch (EVCacheException e) {
             throw new MemcacheRestCacheException("Could set key " + key, e);
         }

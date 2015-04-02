@@ -4,9 +4,11 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.http.HttpStatus;
 import org.hamcrest.core.IsEqual;
+import org.hamcrest.core.IsNull;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -32,6 +34,7 @@ public class MemcacheRestCacheTest {
     private static HashMap<String, Collection<String>> newHeaders() {
         HashMap<String, Collection<String>> map = new HashMap<>();
         map.put(FOO, Lists.newArrayList("bar"));
+        map.put("Cache-Control", Lists.newArrayList("no-transform,public,max-age=2,s-maxage=900"));
         
         return map;
     }
@@ -42,7 +45,8 @@ public class MemcacheRestCacheTest {
     public void setup() throws InterruptedException{
         
         // create daemon and start it
-        final CacheStorage<Key, LocalCacheElement> storage = ConcurrentLinkedHashMap.create(ConcurrentLinkedHashMap.EvictionPolicy.FIFO,
+        final CacheStorage<Key, LocalCacheElement> storage = 
+                        ConcurrentLinkedHashMap.create(ConcurrentLinkedHashMap.EvictionPolicy.FIFO,
             10000, 10000);
         daemon.setCache(new CacheImpl(storage));
         daemon.setBinary(true);
@@ -53,7 +57,7 @@ public class MemcacheRestCacheTest {
     }
 
     @Test
-    public void testSetAndGet() {
+    public void testSetAndGet() throws InterruptedException {
         
         EVCacheClientPoolManager.getInstance().initEVCache("SAMPLECACHE");
         
@@ -72,6 +76,7 @@ public class MemcacheRestCacheTest {
         Assert.assertThat(cachedResponse.getStatus(), IsEqual.equalTo(HttpStatus.SC_OK));
         Assert.assertThat(cachedResponse.getCachedBytes(), IsEqual.equalTo(FOO.getBytes()));
         Assert.assertThat(cachedResponse.getHeaders(), IsEqual.equalTo(headers));
+        
     }
     
     @Test
