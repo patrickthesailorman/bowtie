@@ -39,6 +39,10 @@ import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.niws.client.http.CachedResponse;
 import com.netflix.niws.client.http.RestClient;
 
+/***
+ * InvocationHanlder to handle the API calls 
+ *
+ */
 class JerseyInvocationHandler implements InvocationHandler{
     
     private class JerseyHystrixCommand extends HystrixCommand<Object>{

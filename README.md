@@ -1,18 +1,54 @@
 # bowtie
-Http client library using interfaces and a proxy class to execute HTTP requests and configure hystrix command objects
+A REST client library providing a declarative API to create common REST clients using [Hystrix](https://github.com/Netflix/Hystrix) and [Ribbon](https://github.com/Netflix/ribbon).
 
-See the FakeClient class for sample usage.
+It provides the following features:
+* Can be used in a Netflix-OSS platform or standalone.
+* Annotation based declarative clients
+* Consistent configuration using [Archaius](https://github.com/Netflix/Archaius)
+* Supports JSON serialization via [Jackson](http://jackson.codehaus.org/)
+
+
+## Getting started
+*NOTE:  Assumes understanding of Archaius*
+
+Create a client as an interface
+
+    public interface UserClient {
+    
+	    @Http(
+	        method = Verb.GET,
+	        uriTemplate = "/user/{username}"
+	    )
+	    public User getUser(@Path("username") String name);
+    }
+    
+
+Use the builder to configure the instance
+
+    final RestAdapter restAdapter = RestAdapter.getNamedAdapter("user-client");
+    
+
+Create an instance and start using
+
+    final UserClient userClient = restAdapter.create(UserClient.class);
+    final User user = fakeClient.getUser("jdoe");
+
+See the FakeClient class in the tests for sample calls
 
 
 
-## Tests
+# Tests
+## HTTP
 * HTTP tests use a mock-server for http calls.  When working on the unit tests start up the mock server in a separate shell (see instructions below).
 * To test additional HTTP calls use the MockServerInitializationClass to add mocks.
-* Memcache tests use jmemcached and are started/stopped in the setup/teardown methods of the test.  No need to run memcache independently.
+
+## Memcache
+* Memcache tests use jmemcached and are started/stopped in the setup/teardown methods of the test.
+* Unfortunately jmemcached does not didn't seem to honor the TTL calls, so those are not tested.
 
 
 
-## Mock Server
+# Mock Server
 * See http://www.mock-server.com/  <- RTFM
 * Uses mock-server to mock HTTP requests for testing
 * Start mock server for development using
@@ -20,4 +56,3 @@ See the FakeClient class for sample usage.
 mvn mockserver:run
 ```
 * Mock server is automatically started during "mvn test" and "mvn verify" lifescycles
-
