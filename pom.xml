@@ -2,7 +2,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.kenzan</groupId>
-	<artifactId>ribbon-proxy</artifactId>
+	<artifactId>bowtie</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<dependencies>
 		<dependency>
@@ -55,7 +55,25 @@
 		  <artifactId>jackson-module-jaxb-annotations</artifactId>
 		  <version>2.2.2</version>
 		</dependency>
+
+		<!-- Netflix EvCache -->
+		<dependency>
+			<groupId>com.netflix.evcache</groupId>
+			<artifactId>evcache-client</artifactId>
+			<version>1.0.5</version>
+		</dependency>
+
+		<dependency>
+			<groupId>net.spy</groupId>
+			<artifactId>spymemcached</artifactId>
+			<version>2.10.0</version>
+		</dependency>
 		
+		<dependency>
+	        <groupId>com.esotericsoftware</groupId>
+	        <artifactId>kryo</artifactId>
+	        <version>3.0.1</version>
+	    </dependency>
 		
 		<dependency>
 			<groupId>junit</groupId>
@@ -75,6 +93,19 @@
             <version>3.9.1</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+	        <groupId>com.thimbleware.jmemcached</groupId>
+	        <artifactId>jmemcached-core</artifactId>
+	        <version>1.0.0</version>
+	        <scope>test</scope>
+	    </dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId>
+			<version>1.10.19</version>
+	        <scope>test</scope>
+		</dependency>
+			    
 	</dependencies>
 
 	<build>
@@ -98,7 +129,7 @@
 					<proxyPort>1090</proxyPort>
 					<logLevel>DEBUG</logLevel>
 					 <pipeLogToConsole>true</pipeLogToConsole>
-					<initializationClass>com.kenzan.ribbonproxy.MockServerInitializationClass</initializationClass>
+					<initializationClass>com.kenzan.bowtie.MockServerInitializationClass</initializationClass>
 				</configuration>
 				<executions>
 					<execution>
@@ -124,7 +155,6 @@
 					</dependency>
 				</dependencies>
 			</plugin>
-
 		</plugins>
 
 	</build>

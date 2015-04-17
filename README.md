@@ -1,4 +1,14 @@
-# ribbon-proxy
+# bowtie
+Http client library using interfaces and a proxy class to execute HTTP requests and configure hystrix command objects
+
+See the FakeClient class for sample usage.
+
+
+
+## Tests
+* HTTP tests use a mock-server for http calls.  When working on the unit tests start up the mock server in a separate shell (see instructions below).
+* To test additional HTTP calls use the MockServerInitializationClass to add mocks.
+* Memcache tests use jmemcached and are started/stopped in the setup/teardown methods of the test.  No need to run memcache independently.
 
 
 
@@ -11,9 +21,3 @@ mvn mockserver:run
 ```
 * Mock server is automatically started during "mvn test" and "mvn verify" lifescycles
 
-
-##Backlog
-* Add interface for pre/post classes to allow manipulating request/response during executions
-* Add caching support (only honor max-age for now)
-** http://hc.apache.org/httpcomponents-client-ga/tutorial/html/caching.html
-** http://hc.apache.org/httpcomponents-client-ga/httpclient-cache/apidocs/org/apache/http/impl/client/cache/memcached/MemcachedHttpCacheStorage.html
