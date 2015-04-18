@@ -5,6 +5,11 @@ import com.kenzan.bowtie.cache.RestCache;
 import com.kenzan.bowtie.serializer.JacksonMessageSerializer;
 import com.kenzan.bowtie.serializer.MessageSerializer;
 
+/***
+ * <p>
+ * Configuration object and builder for creating clients using the {@link RestAdapter}
+ * </p>
+ */
 public class RestAdapterConfig {
 
     private MessageSerializer messageSerializer;

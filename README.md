@@ -6,6 +6,7 @@ It provides the following features:
 * Annotation based declarative clients
 * Consistent configuration using [Archaius](https://github.com/Netflix/Archaius)
 * Supports JSON serialization via [Jackson](http://jackson.codehaus.org/)
+* Caching using Guava Cache or Memcache
 
 
 ## Getting started
@@ -35,6 +36,23 @@ Create an instance and start using
 
 See the FakeClient class in the tests for sample calls
 
+
+#Configuration
+Use the RestAdapterConfig to configure the RestAdapter.
+
+    final RestAdapter restAdapter = RestAdapter.getNamedAdapter("user-client", RestAdapterConfig.custom()
+       .withMessageSerializer(new JacksonMessageSerializer())
+       .withEncoding(Encoding.gzip)
+       .build());
+       
+## MessageSerializers
+Use MessageSerializers to control how the request and responses are serialized.
+
+See:  https://github.com/kenzanmedia/bowtie/issues/15 (May be changed later).
+
+## Encoding
+Adding gzip encoding will tell Jersey to use the GZIPContentEncodingFilter for the request.  Adding the Accept-Encoding 
+header and returning the response with a GZIPInputStream.   
 
 
 # Tests

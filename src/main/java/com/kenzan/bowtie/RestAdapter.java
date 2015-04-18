@@ -1,18 +1,37 @@
 package com.kenzan.bowtie;
 
-import com.google.common.base.Preconditions;
-import com.kenzan.bowtie.annotation.Encoding;
-import com.netflix.client.ClientFactory;
-import com.netflix.niws.client.http.RestClient;
-import com.sun.jersey.api.client.filter.GZIPContentEncodingFilter;
-
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+import com.kenzan.bowtie.annotation.Encoding;
+import com.netflix.client.ClientFactory;
+import com.netflix.niws.client.http.RestClient;
+import com.sun.jersey.api.client.filter.GZIPContentEncodingFilter;
 
+/***
+ * <p>Main class for instantiating client instances.</p>
+ * 
+ * Use the default config for most cases (REST/JSON):
+ * <pre>
+ *      final RestAdapter restAdapter = RestAdapter.getNamedAdapter("sample-client");
+ *      fakeClient = restAdapter.create(FakeClient.class);
+ * </pre>
+ * 
+ * Or use a custom config:
+ * <pre>
+ *  final RestAdapter restAdapter2 = RestAdapter.getNamedAdapter("sample-client", RestAdapterConfig.custom()
+ *      .withMessageSerializer(new JacksonMessageSerializer())
+ *      .withEncoding(Encoding.gzip)
+ *      .build());
+ *
+ *      fakeClient2 = restAdapter2.create(FakeClient.class);
+ * </pre>
+ *
+ */
 public class RestAdapter {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(RestAdapter.class);

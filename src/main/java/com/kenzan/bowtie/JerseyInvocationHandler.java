@@ -29,6 +29,7 @@ import com.kenzan.bowtie.annotation.Path;
 import com.kenzan.bowtie.annotation.Query;
 import com.kenzan.bowtie.cache.RestCache;
 import com.kenzan.bowtie.cache.RestCachingPolicy;
+import com.kenzan.bowtie.serializer.MessageSerializer;
 import com.netflix.client.http.HttpRequest;
 import com.netflix.client.http.HttpRequest.Builder;
 import com.netflix.client.http.HttpResponse;
@@ -40,7 +41,19 @@ import com.netflix.niws.client.http.CachedResponse;
 import com.netflix.niws.client.http.RestClient;
 
 /***
- * InvocationHanlder to handle the API calls 
+ * <p>
+ * InvocationHandler to handle the API calls.  Introspects methods during the first call and 
+ * caches metadata required to make HTTP calls as MethodInfo objects.
+ * </p>
+ * 
+ * <p>
+ * The InvocationHandler then [asses the MethodInfo and the runtime parameters to a generic JerseyHystrixCommand to execute the HTTP request
+ * </p>
+ * 
+ * <p>
+ * Parses the response using a {@link MessageSerializer} depending on the return type parsed from the Method.
+ * </p>  
+ *  
  *
  */
 class JerseyInvocationHandler implements InvocationHandler{

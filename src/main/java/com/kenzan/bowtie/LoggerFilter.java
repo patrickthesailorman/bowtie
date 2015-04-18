@@ -19,7 +19,9 @@ import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.filter.ClientFilter;
 import com.sun.jersey.core.util.ReaderWriter;
 
-
+/***
+ * Adds debug logging of the request and response to the logs using slf4j.
+ */
 public class LoggerFilter extends ClientFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerFilter.class);
