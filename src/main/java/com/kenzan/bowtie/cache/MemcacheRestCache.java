@@ -18,6 +18,14 @@ import com.netflix.evcache.EVCacheException;
 import com.netflix.evcache.EVCacheTranscoder;
 import com.netflix.niws.client.http.CachedResponse;
 
+/***
+ * <p>
+ * {@link RestCache} implemented using Memcache.  Uses Kyro for serialization.  Honors the TTL of the value.  
+ * </p> 
+ * 
+ * 
+ * XXX rename to evcache
+ */
 public class MemcacheRestCache  implements RestCache{
     
     protected static class MemcacheRestCacheException extends RuntimeException{
@@ -104,7 +112,8 @@ public class MemcacheRestCache  implements RestCache{
 
     @Override
     public void set(String key, CachedResponse value) {
-        //XXX The TTL is interpreted as millis from epoc if ttl > 30d.  Need to acccount for this in the TTL
+        //XXX The TTL is interpreted as millis from epoc if ttl > 30d.  Need to account for this in the TTL.
+        // See: https://github.com/kenzanmedia/bowtie/issues/20
         LOGGER.debug("Setting cache: {} for {}",  key, value.getTTL());
         try {
             long ttl = value.getTTL();

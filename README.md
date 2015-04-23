@@ -115,9 +115,3 @@ mvn mockserver:run
 ```
 * Mock server is automatically started during "mvn test" and "mvn verify" lifescycles
 
-
-
-#Backlog
-* Add parameter support for cookie
-* Add support for type annotations
-* Add validation for uriTemplates with variables (check to make sure there is a corresponding path parameter)

@@ -18,7 +18,14 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.core.header.InBoundHeaders;
 import com.sun.jersey.spi.MessageBodyWorkers;
 
-
+/***
+ * <p>
+ * POJO class for caching response objects.  Used by Kryo (requires getters/setters).  Also 
+ * used to create re-create {@link HttpResponse}, which is why it has to be in the 
+ * com.netflix.niws.client.http package.
+ * </p> 
+ *
+ */
 public class CachedResponse implements Serializable{
     
     
