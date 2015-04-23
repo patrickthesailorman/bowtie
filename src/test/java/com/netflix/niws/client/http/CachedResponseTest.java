@@ -10,7 +10,9 @@ import org.hamcrest.core.IsEqual;
 import org.junit.Assert;
 import org.junit.Test;
 
-
+/***
+ * Tests {@link CachedResponse}
+ */
 public class CachedResponseTest {
 
     private static HashMap<String, Collection<String>> newHeaders(final long maxAge) {

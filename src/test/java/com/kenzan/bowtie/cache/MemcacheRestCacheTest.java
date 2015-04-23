@@ -4,11 +4,9 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import org.apache.http.HttpStatus;
 import org.hamcrest.core.IsEqual;
-import org.hamcrest.core.IsNull;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -27,6 +25,11 @@ import com.thimbleware.jmemcached.MemCacheDaemon;
 import com.thimbleware.jmemcached.storage.CacheStorage;
 import com.thimbleware.jmemcached.storage.hash.ConcurrentLinkedHashMap;
 
+/***
+ * <p>
+ *  Test for {@link MemcacheRestCache}.  Uses jmemcached, which doesn't currently honor TTLs.
+ * </p> 
+ */
 public class MemcacheRestCacheTest {
 
     final static private String FOO = "foo";

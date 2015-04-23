@@ -25,7 +25,15 @@ import com.netflix.client.http.HttpResponse;
 import com.netflix.config.ConfigurationManager;
 
 
-
+/***
+ * <p>
+ * Tests the {@link RestAdapter} and {@link JerseyInvocationHandler} classes. 
+ * </p>
+ * 
+ * <p>
+ * This class likely tests to much the functionality specific to the {@link JerseyInvocationHandler} may be better separated.
+ * </p> 
+ */
 public class RestAdapterTest {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(RestAdapterTest.class);

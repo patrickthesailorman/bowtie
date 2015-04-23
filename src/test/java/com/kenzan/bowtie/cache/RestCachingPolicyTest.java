@@ -13,7 +13,12 @@ import com.netflix.client.http.HttpRequest;
 import com.netflix.client.http.HttpResponse;
 import com.netflix.niws.client.http.CachedResponse;
 
-
+/***
+ * <p>
+ * Tests {@link RestCachingPolicy}
+ * </p>
+ * 
+ */
 public class RestCachingPolicyTest {
 
     private HashMap<String, Collection<String>> createCacheHeaders() {
