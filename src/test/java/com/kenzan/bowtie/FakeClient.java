@@ -18,7 +18,12 @@ import com.kenzan.bowtie.model.FakeUsers;
 import com.netflix.client.http.HttpRequest.Verb;
 import com.netflix.client.http.HttpResponse;
 
-
+/***
+ * <p>
+ * Example client used for unit testing as well as to demonstrate a variety of use cases
+ * </p>
+ * 
+ */
 public interface FakeClient {
     public static final String GROUP_KEY = "FakeGroup";
     public static final String COMMAND_KEY = "FakeCommand";

@@ -6,13 +6,31 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 
-@Target({ElementType.TYPE, ElementType.METHOD})
+/***
+ * <p>
+ * Runtime method annotation used to specify the Hystrix settings 
+ * </p>
+ */
+@Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Hystrix {
     
+    /***
+     * <p>
+     * Hystrix groupKey value
+     * </p>
+     * 
+     * @return
+     */
     public String groupKey();
     
+    /***
+     * <p>
+     * Hystrix commandKey value
+     * </p>
+     * 
+     * @return
+     */
     public String commandKey();
-    
     
 }

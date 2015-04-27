@@ -9,6 +9,12 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.Parameter;
 
+
+/***
+ * <p>
+ * Initialization class for the mock server.  Used to create mock API's for unit testing.
+ * </p> 
+ */
 public class MockServerInitializationClass implements ExpectationInitializer {
 
     @Override

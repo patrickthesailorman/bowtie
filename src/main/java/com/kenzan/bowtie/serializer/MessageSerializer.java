@@ -2,7 +2,11 @@ package com.kenzan.bowtie.serializer;
 
 import java.io.InputStream;
 
-
+/***
+ * <p> 
+ * Interface for serializing messages
+ * </p>
+ */
 public interface MessageSerializer {
 
     

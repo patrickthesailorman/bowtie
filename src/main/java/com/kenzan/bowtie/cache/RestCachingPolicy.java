@@ -11,6 +11,11 @@ import com.netflix.client.http.HttpRequest;
 import com.netflix.client.http.HttpRequest.Verb;
 import com.netflix.client.http.HttpResponse;
 
+/***
+ * <p>
+ * Provides policies for determining if requests and responses are eligible for caching.
+ * </p> 
+ */
 public class RestCachingPolicy {
     
     private static final Logger LOGGER  = LoggerFactory.getLogger(RestCachingPolicy.class);

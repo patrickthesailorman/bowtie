@@ -10,6 +10,13 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.netflix.niws.client.http.CachedResponse;
 
+/***
+ * <p>
+ * Guava cache based {@link RestCache}.  Caches responses in a Guava {@link Cache}.    Use GuavaRestCache.newDefaultCache()
+ * to create a default cache.  The default cache ignores the HTTP cache headers and caches responses for ten minutes.
+ * </p>
+ *
+ */
 public class GuavaRestCache  implements RestCache{
     
     final static private Logger LOGGER = LoggerFactory.getLogger(GuavaRestCache.class);

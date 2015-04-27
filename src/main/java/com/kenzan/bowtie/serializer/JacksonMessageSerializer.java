@@ -4,7 +4,11 @@ import java.io.InputStream;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-
+/***
+ * <p>
+ * {@link MessageSerializer} for serializing Jackson objects
+ * </p>
+ */
 public class JacksonMessageSerializer implements MessageSerializer {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
