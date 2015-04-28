@@ -1,4 +1,4 @@
-package com.kenzan.bowtie;
+package com.kenzan.bowtie.log;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
