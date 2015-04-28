@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.kenzan.bowtie.annotation.Encoding;
+import com.kenzan.bowtie.log.LoggerFilter;
 import com.netflix.client.ClientFactory;
 import com.netflix.niws.client.http.RestClient;
 import com.sun.jersey.api.client.filter.GZIPContentEncodingFilter;
