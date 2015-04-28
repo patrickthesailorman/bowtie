@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import com.kenzan.bowtie.annotation.Encoding;
 import com.kenzan.bowtie.cache.GuavaRestCache;
+import com.kenzan.bowtie.http.JerseyInvocationHandler;
 import com.kenzan.bowtie.model.FakeUser;
 import com.kenzan.bowtie.model.FakeUserAddress;
 import com.kenzan.bowtie.model.FakeUsers;
