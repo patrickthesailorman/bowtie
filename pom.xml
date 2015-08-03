@@ -4,6 +4,34 @@
 	<groupId>com.kenzan</groupId>
 	<artifactId>bowtie</artifactId>
 	<version>0.0.1</version>
+	
+	
+	<name>bowtie</name>
+	<description>A REST client library providing a declarative API to create common REST clients using Hystrix and Ribbon.</description>
+	<url>https://github.com/kenzanmedia/bowtie</url>
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	
+	<scm>
+		<url>https://github.com/kenzanmedia/bowtie</url>
+		<connection>scm:git:git://github.com/kenzanmedia/bowtie.git</connection>
+		<developerConnection>scm:git:git@github.com:kenzanmedia/bowtie.git</developerConnection>
+	</scm>
+	
+	<developers>
+		<developer>
+			<email>jons@kenzan.com</email>
+			<name>Jonathan Stockdill</name>
+			<url>https://github.com/jon077</url>
+			<id>jon077</id>
+		</developer>
+	</developers>
+	
 	<dependencies>
 		<dependency>
 			<groupId>com.google.guava</groupId>
