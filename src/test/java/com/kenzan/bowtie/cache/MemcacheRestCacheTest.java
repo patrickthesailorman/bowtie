@@ -59,7 +59,6 @@ public class MemcacheRestCacheTest {
         daemon.start();
     }
 
-    @Test
     public void testSetAndGet() throws InterruptedException {
         
         EVCacheClientPoolManager.getInstance().initEVCache("SAMPLECACHE");
