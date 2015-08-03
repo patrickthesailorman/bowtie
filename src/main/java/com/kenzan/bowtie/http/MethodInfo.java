@@ -186,18 +186,18 @@ public class MethodInfo{
         return paramMap;
     }
 
-    private Map<String, String> getCookies(final Object[] args){
-        Map<String, String> allHeaders = this.headers;
+    private Map<String, String> getArgCookies(final Object[] args){
+        Map<String, String> argCookies = new HashMap<>();
         
         for(int i = 0; i < parameters.length; i++){
             final Parameter parameter = parameters[i];
             Cookie annotation = parameter.getAnnotation(Cookie.class);
             if(annotation != null){
-                allHeaders.put(annotation.name(), String.valueOf(args[i]));
+                argCookies.put(annotation.name(), String.valueOf(args[i]));
             }
         }
         
-        return allHeaders;
+        return argCookies;
     }
     
     public Setter getSetter() {
@@ -242,7 +242,7 @@ public class MethodInfo{
         List<String> requestCookies = new ArrayList<>();
         requestCookies.addAll(cookies);
         
-        requestCookies.addAll(this.getCookies(args).entrySet().stream().map(entry -> 
+        requestCookies.addAll(this.getArgCookies(args).entrySet().stream().map(entry ->
           entry.getKey() + "=" + entry.getValue()  
         ).collect(Collectors.toList()));
         
