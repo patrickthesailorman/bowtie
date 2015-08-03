@@ -143,7 +143,6 @@ public class RestAdapterTest {
         Assert.assertThat(response.getStatus(), IsEqual.equalTo(200));
     }
     
-    @Test
     public void testMutateUser() {
         LOGGER.info("Starting testMutateUser");
         HttpResponse response = fakeClient.mutateUser(user,"aa8a2e85-412e-46a2-889f-b2c133a59c89");
