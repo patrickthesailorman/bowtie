@@ -115,3 +115,5 @@ mvn mockserver:run
 ```
 * Mock server is automatically started during "mvn test" and "mvn verify" lifescycles
 
+
+[![powered by CloudBees](./Button-Powered-by-CB.png)](https://www.cloudbees.com/)
