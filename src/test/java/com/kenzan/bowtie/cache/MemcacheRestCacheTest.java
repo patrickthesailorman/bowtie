@@ -5,12 +5,16 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.netflix.evcache.EVCacheTranscoder;
 import org.apache.http.HttpStatus;
 import org.hamcrest.core.IsEqual;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Matchers;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import com.google.common.collect.Lists;
@@ -46,9 +50,9 @@ public class MemcacheRestCacheTest {
     
     @Before
     public void setup() throws InterruptedException{
-        
+
         // create daemon and start it
-        final CacheStorage<Key, LocalCacheElement> storage = 
+        final CacheStorage<Key, LocalCacheElement> storage =
                         ConcurrentLinkedHashMap.create(ConcurrentLinkedHashMap.EvictionPolicy.FIFO,
             10000, 10000);
         daemon.setCache(new CacheImpl(storage));
@@ -120,6 +124,67 @@ public class MemcacheRestCacheTest {
             Assert.assertThat(e.getClass(), IsEqual.equalTo(MemcacheRestCache.MemcacheRestCacheException.class));
             Assert.assertThat(e.getMessage(), IsEqual.equalTo("Could get key foo"));
         }
+    }
+
+    /**
+     * verify that when TTL is under 2592000 seconds, the value is NOT
+     * converted to a unix timestamp.
+     *
+     * @throws EVCacheException
+     */
+    @Test
+    public void testSetTTLSeconds() throws EVCacheException {
+        final EVCache evCache = Mockito.mock(EVCache.class);
+        final String key = "KEY";
+
+        final CachedResponse cachedResponse = Mockito.mock(CachedResponse.class);
+        final MemcacheRestCache memcacheRestCache = new MemcacheRestCache(evCache);
+        final ArgumentCaptor<Integer> ttlCaptor = ArgumentCaptor.forClass(Integer.class);
+
+        Mockito.when(cachedResponse.getTTL()).thenReturn(2591999L);
+        memcacheRestCache.set(key, cachedResponse);
+
+        Mockito.verify(evCache)
+                        .set(Matchers.eq(key), Matchers.any(), Matchers.any(EVCacheTranscoder.class), ttlCaptor.capture());
+
+        int capturedTTL = ttlCaptor.getValue();
+
+        Assert.assertEquals(2591999L, capturedTTL);
+
+    }
+
+    /**
+     * Verify that when TTL is over 2592000L, a unix timestamp is used as the memcache TTL.
+     *
+     * @throws EVCacheException
+     */
+    @Test
+    public void testSetTTLTimestamp() throws EVCacheException {
+        final EVCache evCache = Mockito.mock(EVCache.class);
+        final String key = "KEY";
+        final CachedResponse cachedResponse = Mockito.mock(CachedResponse.class);
+        final MemcacheRestCache memcacheRestCache = new MemcacheRestCache(evCache);
+        final ArgumentCaptor<Integer> ttlCaptor = ArgumentCaptor.forClass(Integer.class);
+
+        Mockito.when(cachedResponse.getTTL()).thenReturn(2592001L);
+
+        memcacheRestCache.set(key, cachedResponse);
+
+        long now = (System.currentTimeMillis() / 1000L);
+
+        Mockito.verify(evCache)
+                        .set(
+                            Matchers.eq(key),
+                            Matchers.any(),
+                            Matchers.any(EVCacheTranscoder.class),
+                            ttlCaptor.capture()
+                        );
+
+        int capturedTTL = ttlCaptor.getValue();
+
+        Assert.assertTrue(capturedTTL > 2592001L);
+        Assert.assertTrue(capturedTTL > now);
+        Assert.assertTrue(capturedTTL < now + 2592002L);
     }
     
     

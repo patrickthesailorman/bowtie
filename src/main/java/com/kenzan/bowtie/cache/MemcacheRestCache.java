@@ -27,7 +27,9 @@ import com.netflix.niws.client.http.CachedResponse;
  * XXX rename to evcache
  */
 public class MemcacheRestCache  implements RestCache{
-    
+
+    private static final long THIRTY_DAYS = 2592000L;
+
     protected static class MemcacheRestCacheException extends RuntimeException{
 
         public MemcacheRestCacheException(String message, Throwable throwable) {
@@ -112,13 +114,17 @@ public class MemcacheRestCache  implements RestCache{
 
     @Override
     public void set(String key, CachedResponse value) {
-        //XXX The TTL is interpreted as millis from epoc if ttl > 30d.  Need to account for this in the TTL.
-        // See: https://github.com/kenzanmedia/bowtie/issues/20
         LOGGER.debug("Setting cache: {} for {}",  key, value.getTTL());
         try {
             long ttl = value.getTTL();
+
+            //Convert TTL to unix timestamp if time is greater than 30 days.
+            if(ttl >= THIRTY_DAYS){
+                ttl += (System.currentTimeMillis() / 1000);
+            }
+
             if(ttl > 0){
-                evCache.set(key, value, TRANSCODER, (int)value.getTTL());
+                evCache.set(key, value, TRANSCODER, (int)ttl);
             }
         } catch (EVCacheException e) {
             throw new MemcacheRestCacheException("Could set key " + key, e);
