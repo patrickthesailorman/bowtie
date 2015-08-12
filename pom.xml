@@ -76,7 +76,7 @@
 		<dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-client-java</artifactId>
-            <version>3.9.1</version>
+            <version>3.9.17</version>
             <scope>test</scope>
         </dependency>
         <dependency>
