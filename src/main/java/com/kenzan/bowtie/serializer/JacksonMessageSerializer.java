@@ -3,6 +3,7 @@ package com.kenzan.bowtie.serializer;
 import java.io.InputStream;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 
 /***
  * <p>
@@ -12,9 +13,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class JacksonMessageSerializer implements MessageSerializer {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    
+
+    public JacksonMessageSerializer() {
+        objectMapper.registerModule(new JaxbAnnotationModule());
+    }
+
     @Override
-    public Object readValue(Class<?> clazz, InputStream inputStream) throws Exception {
+    public Object readValue(Class<?> clazz, InputStream inputStream)
+            throws Exception {
         return objectMapper.reader(clazz).readValue(inputStream);
     }
 
