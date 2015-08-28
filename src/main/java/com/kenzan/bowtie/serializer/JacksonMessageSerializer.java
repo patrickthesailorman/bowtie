@@ -12,9 +12,14 @@ import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
  */
 public class JacksonMessageSerializer implements MessageSerializer {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
+
+    public JacksonMessageSerializer(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     public JacksonMessageSerializer() {
+        this(new ObjectMapper());
         objectMapper.registerModule(new JaxbAnnotationModule());
     }
 
