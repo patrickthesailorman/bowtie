@@ -19,6 +19,7 @@ import com.kenzan.bowtie.annotation.Body;
 import com.kenzan.bowtie.annotation.CacheKeyGroup;
 import com.kenzan.bowtie.annotation.Cookie;
 import com.kenzan.bowtie.annotation.Cookies;
+import com.kenzan.bowtie.annotation.HeaderParam;
 import com.kenzan.bowtie.annotation.HystrixGroup;
 import com.kenzan.bowtie.annotation.Path;
 import com.kenzan.bowtie.annotation.Query;
@@ -29,7 +30,6 @@ import com.netflix.hystrix.HystrixCommand.Setter;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.ribbon.proxy.annotation.Http;
-import com.netflix.ribbon.proxy.annotation.Http.Header;
 
 public class MethodInfo {
 
@@ -148,7 +148,7 @@ public class MethodInfo {
 
         for (int i = 0; i < parameters.length; i++) {
             final Parameter parameter = parameters[i];
-            Header annotation = parameter.getAnnotation(Header.class);
+            HeaderParam annotation = parameter.getAnnotation(HeaderParam.class);
             if (annotation != null) {
                 allHeaders.put(annotation.name(), String.valueOf(args[i]));
             }
