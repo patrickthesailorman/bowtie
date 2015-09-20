@@ -9,7 +9,7 @@ import com.kenzan.bowtie.annotation.CacheKeyGroup;
 import com.kenzan.bowtie.annotation.Cookie;
 import com.kenzan.bowtie.annotation.Header;
 import com.kenzan.bowtie.annotation.Http;
-import com.kenzan.bowtie.annotation.Hystrix;
+import com.kenzan.bowtie.annotation.HystrixGroup;
 import com.kenzan.bowtie.annotation.Path;
 import com.kenzan.bowtie.annotation.Query;
 import com.kenzan.bowtie.model.FakeUser;
@@ -36,7 +36,7 @@ public interface FakeClient {
             @Header(name="X-SESSION-ID", value="55892d6d-77df-4617-b728-6f5de97f5752")
         }
     )
-    @Hystrix(
+    @HystrixGroup(
         groupKey=GROUP_KEY, commandKey=COMMAND_KEY
         )
     public FakeUser getUser(@Path("username") String name);
@@ -49,7 +49,7 @@ public interface FakeClient {
             @Header(name="X-SESSION-ID", value="55892d6d-77df-4617-b728-6f5de97f5752")
         }
     )
-    @Hystrix(
+    @HystrixGroup(
         groupKey=GROUP_KEY, commandKey=COMMAND_KEY
         )
     @CacheKeyGroup("userCache")
@@ -63,7 +63,7 @@ public interface FakeClient {
             @Header(name="X-SESSION-ID", value="55892d6d-77df-4617-b728-6f5de97f5752")
         }
     )
-    @Hystrix(
+    @HystrixGroup(
         groupKey=GROUP_KEY, commandKey=COMMAND_KEY
         )
     @CacheKeyGroup("userCache")
@@ -78,7 +78,7 @@ public interface FakeClient {
         },
         responseClass=FakeUser.class
     )
-    @Hystrix(
+    @HystrixGroup(
         groupKey=GROUP_KEY, commandKey=COMMAND_KEY
         )
     public Observable<FakeUser> getUserObservable(@Path("username") String name);
@@ -91,7 +91,7 @@ public interface FakeClient {
             @Header(name="Cache-Control", value="no-cache")
         }
     )
-    @Hystrix(
+    @HystrixGroup(
         groupKey=GROUP_KEY, commandKey=COMMAND_KEY
         )
     public FakeUserAddress getUserAddress(@Path("username") String name,
@@ -102,7 +102,7 @@ public interface FakeClient {
         method = Verb.GET,
         uriTemplate = "/user"
     )
-    @Hystrix(
+    @HystrixGroup(
         groupKey=GROUP_KEY, commandKey=COMMAND_KEY
         )
     public FakeUsers getUsers(@Query("byUsername") String username, 
@@ -116,7 +116,7 @@ public interface FakeClient {
         method = Verb.GET,
         uriTemplate = "/user/role"
     )
-    @Hystrix(
+    @HystrixGroup(
         groupKey=GROUP_KEY, commandKey=COMMAND_KEY
         )
     public FakeUsers getRoleUsers(@Query("byRole") com.google.common.base.Optional<String> role);
@@ -127,7 +127,7 @@ public interface FakeClient {
         method = Verb.PUT,
         uriTemplate = "/user"
     )
-    @Hystrix(
+    @HystrixGroup(
         groupKey=GROUP_KEY, commandKey=COMMAND_KEY
         )
     public HttpResponse mutateUser(@Body FakeUser user, @Cookie(name="session") String sessionId);
@@ -144,7 +144,7 @@ public interface FakeClient {
             @Cookie(name="session", value="0a1bc2a7-11ef-4781-9c06-8d9b42719797")
         }
     )
-    @Hystrix(
+    @HystrixGroup(
         groupKey=GROUP_KEY, commandKey=COMMAND_KEY
         )
     public HttpResponse emailUser(@Body FakeUser user);
@@ -157,7 +157,7 @@ public interface FakeClient {
         method = Verb.DELETE,
         uriTemplate = "/user/{username}"
     )
-    @Hystrix(
+    @HystrixGroup(
         groupKey=GROUP_KEY, commandKey=COMMAND_KEY
         )
     public HttpResponse deleteUser(@Path("username") String name);
