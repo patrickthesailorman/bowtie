@@ -64,9 +64,10 @@ public class RestAdapter {
     @SuppressWarnings("unchecked")
     public <T> T create(Class<T> clientClass) {
 
-        Preconditions.checkNotNull("NamedClient required", this.namedClient);
-        Preconditions.checkNotNull("MessageSerializer required",
-                this.restAdapterConfig.getMessageSerializer());
+        Preconditions.checkNotNull(this.namedClient, "NamedClient required");
+        Preconditions.checkNotNull(
+                this.restAdapterConfig.getMessageSerializer(),
+                "MessageSerializer required");
 
         LOGGER.info("Using NamedClient {}", this.namedClient);
         LOGGER.info("Using MessageSerializer {}",
