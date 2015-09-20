@@ -24,78 +24,81 @@ import com.sun.jersey.core.util.ReaderWriter;
  */
 public class LoggerFilter extends ClientFilter {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LoggerFilter.class);
-    
+    private static final Logger LOGGER = LoggerFactory
+            .getLogger(LoggerFilter.class);
+
     @Override
-    public ClientResponse handle(ClientRequest request) throws ClientHandlerException {
+    public ClientResponse handle(ClientRequest request)
+            throws ClientHandlerException {
 
         String uuid = UUID.randomUUID().toString();
-        
-        if(LOGGER.isDebugEnabled()){
+
+        if (LOGGER.isDebugEnabled()) {
             logRequest(uuid, request);
         }
 
         ClientResponse response = getNext().handle(request);
-        
-        if(LOGGER.isDebugEnabled()){
+
+        if (LOGGER.isDebugEnabled()) {
             logResponse(uuid, response);
         }
-        
+
         return response;
     }
 
     private void logResponse(String uuid, ClientResponse response) {
-        
 
         final StringBuffer sb = new StringBuffer();
         Status status = response.getClientResponseStatus();
-        sb.append(uuid + "\n" + status.getStatusCode() + " " + status.getReasonPhrase() + "\n");
-        
-        
-        response.getHeaders().forEach((k, v) -> {
-            String value = v.stream()
+        sb.append(uuid + "\n" + status.getStatusCode() + " "
+                + status.getReasonPhrase() + "\n");
+
+        response.getHeaders().forEach(
+                (k, v) -> {
+                    String value = v.stream()
                             .map(e -> (e == null ? "" : e.toString()))
                             .collect(Collectors.joining(";"));
-            sb.append(k + ": " + value + "\n");
-        });
-        
-        try(ByteArrayOutputStream out = new ByteArrayOutputStream();
-            InputStream entityInputStream = response.getEntityInputStream(); ){
+                    sb.append(k + ": " + value + "\n");
+                });
+
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream();
+                InputStream entityInputStream = response.getEntityInputStream();) {
             ReaderWriter.writeTo(entityInputStream, out);
 
             byte[] requestEntity = out.toByteArray();
             String body = new String(requestEntity, Charsets.UTF_8);
-            if(body.length() > 0){
+            if (body.length() > 0) {
                 sb.append("Body: " + body);
             }
-            
-            response.setEntityInputStream(new ByteArrayInputStream(requestEntity));
+
+            response.setEntityInputStream(new ByteArrayInputStream(
+                    requestEntity));
         } catch (IOException ex) {
             throw new ClientHandlerException(ex);
         }
-        
+
         LOGGER.debug(sb.toString());
-         
+
     }
 
     private void logRequest(String uuid, ClientRequest request) {
 
-        
         final StringBuffer sb = new StringBuffer();
-        
-        sb.append(uuid + "\n" + request.getMethod() + " " + request.getURI() + "\n");
-        
-        request.getHeaders().forEach((k, v) -> {
-            String value = v.stream()
+
+        sb.append(uuid + "\n" + request.getMethod() + " " + request.getURI()
+                + "\n");
+
+        request.getHeaders().forEach(
+                (k, v) -> {
+                    String value = v.stream()
                             .map(e -> (e == null ? "" : e.toString()))
                             .collect(Collectors.joining(";"));
-            sb.append(k + ": " + value + "\n");
-        });
-        
-        Optional.ofNullable(request.getEntity())
-        .ifPresent(e -> sb.append("Body: " + e));
-        
-        
+                    sb.append(k + ": " + value + "\n");
+                });
+
+        Optional.ofNullable(request.getEntity()).ifPresent(
+                e -> sb.append("Body: " + e));
+
         LOGGER.debug(sb.toString());
     }
 

@@ -20,6 +20,7 @@ import com.kenzan.bowtie.annotation.CacheKeyGroup;
 import com.kenzan.bowtie.annotation.Cookie;
 import com.kenzan.bowtie.annotation.Cookies;
 import com.kenzan.bowtie.annotation.HystrixGroup;
+import com.kenzan.bowtie.annotation.Path;
 import com.kenzan.bowtie.annotation.Query;
 import com.kenzan.bowtie.annotation.ResponseType;
 import com.netflix.client.http.HttpRequest;
@@ -37,8 +38,8 @@ public class MethodInfo {
     private final Class<?> responseClass;
     private final Map<String, String> headers;
     private final Http http;
-    private final Cookies cookiesAnnotation;
-    private final ResponseType responseType;
+    private final Optional<Cookies> cookiesAnnotation;
+    private final Optional<ResponseType> responseType;
     private final HystrixGroup hystrix;
     private final boolean isObservable;
     private final String cacheKeyGroup;
@@ -58,23 +59,13 @@ public class MethodInfo {
                         () -> new IllegalStateException(
                                 "No Http annotation present."));
 
-        cookiesAnnotation = Arrays
-                .stream(method.getAnnotations())
+        cookiesAnnotation = Arrays.stream(method.getAnnotations())
                 .filter(a -> Cookies.class.equals(a.annotationType()))
-                .map(a -> (Cookies) a)
-                .findFirst()
-                .orElseThrow(
-                        () -> new IllegalStateException(
-                                "No Cookies annotation present."));
+                .map(a -> (Cookies) a).findFirst();
 
-        responseType = Arrays
-                .stream(method.getAnnotations())
+        responseType = Arrays.stream(method.getAnnotations())
                 .filter(a -> ResponseType.class.equals(a.annotationType()))
-                .map(a -> (ResponseType) a)
-                .findFirst()
-                .orElseThrow(
-                        () -> new IllegalStateException(
-                                "No ResponseTpye annotation present."));
+                .map(a -> (ResponseType) a).findFirst();
 
         // GET HYSTRIX ANNOTATION
         hystrix = Arrays
@@ -104,17 +95,21 @@ public class MethodInfo {
         if (headers.containsKey("Cookie")) {
             cookies.add(this.headers.remove("Cookie"));
         }
-
-        cookies.addAll(Arrays.stream(cookiesAnnotation.cookies())
-                .map(cookie -> cookie.name() + "=" + cookie.value())
-                .collect(Collectors.toList()));
+        if (cookiesAnnotation.isPresent()) {
+            cookies.addAll(Arrays.stream(cookiesAnnotation.get().cookies())
+                    .map(cookie -> cookie.name() + "=" + cookie.value())
+                    .collect(Collectors.toList()));
+        }
 
         @SuppressWarnings("rawtypes")
         final Class returnType = method.getReturnType();
         @SuppressWarnings("rawtypes")
-        final Class httpClass = Class.class
-                .equals(responseType.responseClass()) ? null : responseType
-                .responseClass();
+        final Class httpClass;
+        if (responseType.isPresent()) {
+            httpClass = responseType.get().responseClass();
+        } else {
+            httpClass = null;
+        }
 
         this.isObservable = Observable.class.equals(returnType);
         if (this.isObservable) {
@@ -136,9 +131,9 @@ public class MethodInfo {
 
         for (int i = 0; i < parameters.length; i++) {
             final int count = i;
-            Optional.ofNullable(parameters[count].getAnnotation(Http.class))
+            Optional.ofNullable(parameters[count].getAnnotation(Path.class))
                     .ifPresent(p -> {
-                        map.put(p.uri(), args[count]);
+                        map.put(p.value(), args[count]);
                     });
         }
 
