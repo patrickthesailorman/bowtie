@@ -8,24 +8,29 @@ import java.lang.annotation.Target;
 
 /***
  * <p>
- * Runtime method or parameter annotation to represent the cookie of a request.
+ * Runtime method annotation used to specify the Hystrix settings 
  * </p>
  */
+@Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD, ElementType.PARAMETER})
-public @interface Header {
+public @interface HystrixGroup {
     
     /***
-     * Name of the header.
-     *
+     * <p>
+     * Hystrix groupKey value
+     * </p>
+     * 
      * @return
      */
-    public String name();
+    public String groupKey();
     
     /***
-     * Value of the header.  Default is "".
-     *
+     * <p>
+     * Hystrix commandKey value
+     * </p>
+     * 
      * @return
      */
-    public String value() default "";
+    public String commandKey();
+    
 }
