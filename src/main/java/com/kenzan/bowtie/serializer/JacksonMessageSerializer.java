@@ -2,6 +2,8 @@ package com.kenzan.bowtie.serializer;
 
 import java.io.InputStream;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 
@@ -21,6 +23,9 @@ public class JacksonMessageSerializer implements MessageSerializer {
     public JacksonMessageSerializer() {
         this(new ObjectMapper());
         objectMapper.registerModule(new JaxbAnnotationModule());
+        objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        objectMapper.configure(
+                MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
     }
 
     @Override
