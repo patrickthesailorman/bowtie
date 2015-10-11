@@ -18,14 +18,14 @@ public @interface HeaderParam {
     /***
      * Name of the header.
      *
-     * @return
+     * @return Name of the header
      */
     public String name();
     
     /***
      * Value of the header.  Default is "".
      *
-     * @return
+     * @return Value of the header
      */
     public String value() default "";
 }
