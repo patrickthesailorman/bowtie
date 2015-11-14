@@ -25,6 +25,9 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /***
  * <p>
  * InvocationHandler to handle the API calls.  Introspects methods during the first call and 
@@ -42,7 +45,8 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  */
 public class JerseyInvocationHandler implements InvocationHandler{
-    
+	
+	final static private Logger LOGGER = LoggerFactory.getLogger(JerseyInvocationHandler.class);
     private final Map<Method, MethodInfo> cache = new ConcurrentHashMap<>();
     private final RestClient restClient;
     private final RestAdapterConfig restAdapterConfig;
@@ -53,9 +57,7 @@ public class JerseyInvocationHandler implements InvocationHandler{
     }
 
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-   
-        System.out.println("\n\n");
-        System.out.println("args: " + method.getName() +  " " + (args == null ? "" : Arrays.asList(args)));
+    	LOGGER.debug("args: {} = {}", method.getName(), args == null ? "NULL" : Arrays.asList(args));
         
         MethodInfo methodInfo = cache.get(method);
         if(methodInfo == null){
