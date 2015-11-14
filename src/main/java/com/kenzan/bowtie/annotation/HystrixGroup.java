@@ -35,7 +35,7 @@ public @interface HystrixGroup {
      * Hystrix groupKey value
      * </p>
      * 
-     * @return
+     * @return Hystrix groupKey value
      */
     public String groupKey();
     
@@ -44,7 +44,7 @@ public @interface HystrixGroup {
      * Hystrix commandKey value
      * </p>
      * 
-     * @return
+     * @return Hystrix commandKey value
      */
     public String commandKey();
     

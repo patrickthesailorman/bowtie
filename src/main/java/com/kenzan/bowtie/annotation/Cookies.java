@@ -36,7 +36,7 @@ public @interface Cookies {
      * a parameter annotation
      * </p>
      * 
-     * @return
+     * @return an array of {@link Cookie}.
      */
     public Cookie[] cookies() default {};
 

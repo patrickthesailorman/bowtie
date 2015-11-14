@@ -32,13 +32,13 @@ public @interface Cookie {
     
     /***
      * Name of the cookie
-     * @return
+     * @return Name of the cookie
      */
     public String name();
     
     /***
      * Value of the cookie.  The default is "".
-     * @return
+     * @return Value of the cookie
      */
     public String value() default "";
 }

@@ -29,8 +29,8 @@ public interface RestCache {
     /***
      * Gets the {@link CachedResponse}
      * 
-     * @param key
-     * @return
+     * @param key the key for CachedResponse
+     * @return an {@link Optional} of {@link CachedResponse}
      */
     public Optional<CachedResponse> get(String key);
 
@@ -38,8 +38,8 @@ public interface RestCache {
     /***
      * Sets the {@link CachedResponse}
      * 
-     * @param key
-     * @param httpResponse
+     * @param key the key
+     * @param httpResponse the value
      */
     public void set(String key, CachedResponse httpResponse);
 }
